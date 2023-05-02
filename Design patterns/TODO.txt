@@ -1,0 +1,12 @@
+Crucial to the task:
+- `add` command
+- handle quoted values in `find`
+- add objects to dictionaries in constructors
+
+Cleanup & cosmetic changes:
+- Exception Invalid argument: print which and command's usage
+- `help` command, ToString() methods
+- Prettier object printing? Reference fields
+- In Filterable.cs: The part of each class implementing IFilterable should be put into some kind of seperate abstract classes. Additionally each of them should inherit the same Get...ByName implementations
+- In Commands.cs: Merge `list` and `find` commands.
+- In IteratorLab.cs: Indexer of any nth element using ceil(sqrt(n))

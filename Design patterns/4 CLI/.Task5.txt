@@ -1,0 +1,134 @@
+For this part you’re required to make your application run in a loop reading and processing commands
+from standard input. The starting data for your application (which will be used to execute commands
+on) is the objects that you have created during previous parts. Since the task builds on top of the
+preceding ones you are required to maintain the previously written code and make it work with the
+new functionalities - for instance the collection should still be able to store both representations
+of the objects.
+
+You are free to implement these commands using any pattern you might see fit. Preferably your code
+handling commands logic should be independent of the class chosen by the user. In further parts you
+might be required to add new commands with possibly very different functionalities, so make sure to
+take that into account, when designing the structure of your code. Switches and IF chains are
+generally not a correct way to go.
+
+IMPORTANT: Implemented commands must interact with previously created data and use implemented
+collections!
+
+These are the commands that you are required to implement during this task:
+
+1. list - prints all objects of a particular type
+
+The format of the command should be as follows:
+
+    list <name_of_the_class>
+
+The command should print to the console all of the objects of this class where printing an object
+means listing all of its non reference fields (make sure that the format is readable and not just
+blatantly printing the values of all of the fields).
+
+In the future there might be more types so make sure that you account for that.
+
+Example usages:
+    list game
+    list animal
+
+2. find - prints objects matching certain conditions
+
+Find works similarly to 'list', but you can also add optional parameters for filtering results. Only
+results that fulfil all of the requirements are to be printed.
+
+The format of the command should be as follows:
+
+    find <name_of_the_class> [<requirement> …]
+
+where requirements (space separated list of requirements) specify acceptable values of atomic non
+reference fields. They follow format:
+
+    <name_of_field>=|<|><value>
+
+Where "=|<|>" means any strong comparison operator. For numerical fields natural comparison should
+be used. Strings should use a lexicographic order. For other types only "=" is allowed. If a value
+were to contain spaces it should be placed inside quotation marks.
+
+You should check that the name of the field is correct for the specified class and that the value
+can be parsed to the correct type. If there are any errors in the command they should be reported
+instead of printing the result of finding.
+
+Usage of Reflection is forbidden.
+
+Everything that was said about "list" is also applicable to "find".
+
+Example usage:
+    find game name="Elden Ring"
+
+3. exit - gracefully finish execution of your application
+
+HINT 1: You can use a dictionary keyed by command name that stores command logic. Think what should
+hold this logic. A class instance, event, function or something else? Should it accept parsed input
+tokens or raw string? What if your command want’s to ask the user for additional inputs? (This is
+not the only way to do this, you can try to think of other patterns to use).
+
+HINT 2: For each class you will need to know fields that can be used for filtering along with their
+type. Should this be handled as an internal class logic or some common logic, using data obtained
+from class?
+
+
+***************  LABORATORY PART STARTS HERE ***************
+EVERYTHING ABOVE IS ALSO REQUIRED TO PASS THE LABORATORY PART
+
+For this part you are required to implement one new command:
+
+    add - adds a new object of a particular type.
+
+This command will be unique in a way that it will require the user to enter multiple lines of
+additional information before getting fully executed. The format of the first line of the command
+should be as follows:
+
+    add <name_of_the_class> base|secondary
+
+where base|secondary defines the representation in which the object should be created. After
+receiving the first line the program should present the user with names of all of the atomic non
+reference fields of this particular class. The program waits for further instructions from the user
+describing the values of the fields of the object that is supposed to be created with the add
+command. The format for each line is as follows:
+
+	<name_of_field>=<value>
+
+A line like that means that the value of the field <name_of_field> for the newly created object
+should be equal to <value>. The user can enter however many lines they want in such a format (even
+repeating the fields that they have already defined - in this case the previous value is overridden)
+describing the object until using one of the following commands:
+
+	DONE
+
+or
+
+	EXIT
+
+After receiving the DONE command the creation process should finish and the program should add a new
+object described by the user to the collection. After receiving the EXIT command the creation
+process should also finish but no new object is created and nothing is added to the collection. The
+data provided by the user is also discarded.
+
+Example usages:
+    add book base
+    [Available fields: 'title, year, pageCount']
+    title="The Right Stuff"
+    year=1993
+    name=abc
+    [Some sensible error message]
+    DONE
+    [Book created]
+
+add book secondary
+    [Available fields: "title, year, pageCount"]
+    title="The Right Stuff"
+    EXIT
+    [Book creation abandoned]
+
+Exact look of the prompt and responses is up to the user. If a value for a field was not mentioned
+by the user you should provide a default value which makes sense in the context of your assigned
+topic.
+
+HINT: Which pattern will work here, when we need to partially and interactively assign fields of a
+to be created object?
