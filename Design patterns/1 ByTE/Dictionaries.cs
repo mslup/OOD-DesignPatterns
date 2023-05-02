@@ -14,36 +14,32 @@ namespace ProjOb
             = new Dictionary<string, IStudent>();
 
         public static readonly Dictionary<string, IDictionary?>
-            objectDictionary = new Dictionary<string, IDictionary?> 
-            { 
-                { "rooms", RoomDict }, 
+            objectDictionary = new Dictionary<string, IDictionary?>
+            {
+                { "rooms", RoomDict },
                 { "courses", CourseDict },
                 { "teachers", TeacherDict },
                 { "students", StudentDict },
             };
 
-        static public void AddRooms(params Room[] rooms)
+        static public void AddRoom(IRoom room)
         {
-            foreach (var room in rooms)
-                RoomDict[room.Number.ToString()] = room;
+            RoomDict[room.Number.ToString()] = room;
         }
 
-        static public void AddCourses(params Course[] courses)
+        static public void AddCourse(ICourse course)
         {
-            foreach (var course in courses)
-                CourseDict[course.Code] = course;
+            CourseDict[course.Code] = course;
         }
 
-        static public void AddTeachers(params Teacher[] teachers)
+        static public void AddTeacher(ITeacher teacher)
         {
-            foreach (var teacher in teachers)
-                TeacherDict[teacher.Code] = teacher;
+            TeacherDict[teacher.Code] = teacher;
         }
 
-        static public void AddStudents(params Student[] students)
+        static public void AddStudent(IStudent student)
         {
-            foreach (var student in students)
-                StudentDict[student.Code] = student;
+            StudentDict[student.Code] = student;
         }
     }
 }

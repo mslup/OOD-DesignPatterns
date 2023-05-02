@@ -36,7 +36,6 @@ namespace ProjOb
 
         public IComparable GetFieldByName(string name)
         {
-            // maybe throw an exception
             return nameFieldPairs[name];
         }
 
@@ -150,6 +149,7 @@ namespace ProjOb
             = new Dictionary<string, string>
             {
                 { "names", "string" },
+                { "name", "string" },
                 { "surname", "string" },
                 { "rank", "enum" },
                 { "code", "string" },
@@ -161,6 +161,7 @@ namespace ProjOb
             nameFieldPairs = new Dictionary<string, IComparable>
             {
                 { "names", string.Join(" ", Names) },
+                { "name", string.Join(" ", Names) },
                 { "surname", Surname },
                 { "rank", TeacherRank.ToString() },
                 { "code", Code }

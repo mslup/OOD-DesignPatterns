@@ -22,9 +22,9 @@
             if (CommandDictionary.TryGetValue(tokens[0], out ICommand? command))
             {
                 if (tokens.Length > 1)
-                    command.Argument = tokens[1];
+                    command.Arguments = tokens[1];
                 else
-                    command.Argument = "";
+                    command.Arguments = "";
 
                 return command;
             }

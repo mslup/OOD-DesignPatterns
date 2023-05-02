@@ -8,7 +8,7 @@ namespace ProjOb
 {
     public interface ICommand
     {
-        public string Argument { get; set; }
+        public string Arguments { get; set; }
         public void Execute();
 
         //public string ToString();
@@ -16,13 +16,13 @@ namespace ProjOb
 
     public class CommandList : ICommand
     {
-        public string Argument { get; set; }
+        public string Arguments { get; set; }
 
-        public CommandList() => Argument = "";
+        public CommandList() => Arguments = "";
 
         public void Execute()
         {
-            if (!Dictionaries.objectDictionary.TryGetValue(Argument, out IDictionary? dict))
+            if (!Dictionaries.objectDictionary.TryGetValue(Arguments, out IDictionary? dict))
             {
                 Console.WriteLine("Invalid argument");
                 Console.WriteLine(this);
@@ -52,14 +52,15 @@ namespace ProjOb
 
     public class CommandFind : ICommand
     {
-        public string Argument { get; set; }
-        public CommandFind() => Argument = "";
+        public string Arguments { get; set; }
+        public CommandFind() => Arguments = "";
 
         private class Comparison
         {
             public Comparison(string requirement)
             {
                 string[] parts = Regex.Split(requirement, @"([<=>])");
+                // what if set name has an equal sign
                 if (parts.Length != 3)
                 {
                     throw new ArgumentException();
@@ -70,7 +71,7 @@ namespace ProjOb
                 Operator = parts[1];
                 ValueString = parts[2];
                 Value = null;
-                ValueParsed = false; ;
+                ValueParsed = false;
             }
 
             private string Operator { get; set; }
@@ -142,7 +143,7 @@ namespace ProjOb
 
         public void Execute()
         {
-            string[] tokens = Argument.Split(' ', 2);
+            string[] tokens = Arguments.Split(' ', 2);
 
             if (!Dictionaries.objectDictionary.TryGetValue(tokens[0],
                 out IDictionary? iteratedObjects))
@@ -159,15 +160,15 @@ namespace ProjOb
             }
 
             // handle no requierements...
-            // handle quotes...
-            string[] requirements = tokens[1].Split(' ');
+            var requirements = new Regex(@"\S+\s*[=><](?:"".*?""|'.*?'|\s*\S+)")
+                .Matches(tokens[1]);
             var predicates = new List<Comparison>();
 
-            foreach (var requirement in requirements)
+            foreach (Match requirement in requirements)
             {
                 try
                 {
-                    var comparer = new Comparison(requirement);
+                    var comparer = new Comparison(requirement.Value);
                     predicates.Add(comparer);
                 }
                 catch (ArgumentException)
@@ -179,13 +180,16 @@ namespace ProjOb
 
             foreach (DictionaryEntry pair in iteratedObjects)
             {
-                bool predicateSatisfied = true;
+                bool predicatesSatisfied = true;
                 foreach (var predicate in predicates)
                 {
                     try
                     {
                         if (!predicate.Compare(pair.Value as IFilterable))
-                            predicateSatisfied = false;
+                        {
+                            predicatesSatisfied = false;
+                            break;
+                        }
                     }
                     catch (Exception ex) when (
                         ex is ArgumentException ||
@@ -197,7 +201,7 @@ namespace ProjOb
 
                 }
                 
-                if (predicateSatisfied)
+                if (predicatesSatisfied)
                     Console.WriteLine(pair.Value);
             }
         }
@@ -206,11 +210,64 @@ namespace ProjOb
 
     public class CommandAdd : ICommand
     {
-        public string Argument { get; set; }
-        public CommandAdd() => Argument = "";
+        
+        public string Arguments { get; set; }
+        public CommandAdd() => Arguments = "";
         public void Execute() 
-        { 
-            
+        {
+            string[] tokens = Arguments.Split(' ');
+            if (tokens.Length > 2)
+            {
+                Console.WriteLine("Invalid arguments");
+                return;
+            }
+
+            var builder = new RoomBuilder();
+
+            string? input = "";
+            Console.WriteLine("Available fields: '" +
+                string.Join(", ", builder.fieldSetterPairs.Select(x => x.Key)) +
+                "'");
+            Console.WriteLine("Type DONE to confirm creation sor EXIT to abandon.");
+            while (true)
+            {
+                Console.Write(CLI.Prompt);
+                input = Console.ReadLine();
+
+                if (input == null || input.Length == 0)
+                    continue;
+
+                if (input == "DONE")
+                {
+                    builder.Build();
+                    Console.WriteLine("Object created.");
+                    break;
+                }
+                if (input == "EXIT")
+                {
+                    builder.Build();
+                    Console.WriteLine("Object creation abandoned.");
+                    break;
+                }
+
+                string[] nameValue = input.Trim().Split("=");
+                if (nameValue.Length != 2)
+                {
+                    Console.WriteLine("Invalid argument");
+                    continue;
+                }
+
+                try
+                {
+                    builder.fieldSetterPairs[nameValue[0].Trim()](nameValue[1].Trim());
+                }
+                catch (Exception ex) when (
+                    ex is ArgumentException || 
+                    ex is KeyNotFoundException)
+                {
+                    Console.WriteLine("Invalid argument");
+                }
+            }
         }
     }
 }

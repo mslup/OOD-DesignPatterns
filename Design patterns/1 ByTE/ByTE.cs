@@ -1,63 +1,12 @@
 ﻿using System.Numerics;
 using System.Reflection.Metadata.Ecma335;
+using System.Security.Cryptography.X509Certificates;
 using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using static ProjOb.Teacher;
 
 namespace ProjOb
-{
-    public interface IByTE
-    {
-        public List<IRoom> Rooms { get; }
-        public List<ICourse> Courses { get; }
-        public List<ITeacher> Teachers { get; }
-        public List<IStudent> Students { get; }
-
-        public string ToString();
-    }
-
-    public interface IRoom : IFilterable
-    {
-        public enum RoomTypeEnum { laboratory, tutorials, lecture, other };
-        public int Number { get; }
-        public RoomTypeEnum RoomType { get; }
-        public List<ICourse> Courses { get; }
-        public string ToString();
-    }
-
-    public interface ICourse : IFilterable
-    {
-        public string Name { get; }
-        public string Code { get; }
-        public int Duration { get; }
-        public List<ITeacher> Teachers { get; }
-        public List<IStudent> Students { get; }
-        public string ToString();
-    }
-
-    public interface ITeacher : IFilterable
-    {
-        public enum TeacherRankEnum { KiB, MiB, GiB, TiB };
-        public List<string> Names { get; }
-        public string Surname { get; }
-        public string Code { get; }
-        public TeacherRankEnum TeacherRank { get; }
-        public List<ICourse> Courses { get; }
-        public string ToString();
-    }
-
-    public interface IStudent : IFilterable
-    {
-        public List<string> Names { get; }
-        public string Surname { get; }
-        public string Code { get; }
-        public int Semester { get; }
-        public List<ICourse> Courses { get; }
-        public string ToString();
-    }
-
-  
-
+{ 
     public partial class ByTE : IByTE
     {
         private List<IRoom> rooms;
@@ -142,7 +91,6 @@ namespace ProjOb
         }
     }
 
-    
     public partial class Room : IRoom
     {
         private int _number;
@@ -160,6 +108,7 @@ namespace ProjOb
             this._type = type;
             this._classes = new List<ICourse>();
             InitDictionary();
+            Dictionaries.AddRoom(this);
         }
 
         public void AddCourses(params Course[] courses)
@@ -197,6 +146,7 @@ namespace ProjOb
             _teachers = new List<ITeacher>();
             _students = new List<IStudent>();
             InitDictionary();
+            Dictionaries.AddCourse(this);
         }
 
         public void LinkTeachers(params Teacher[] teachers)
@@ -247,6 +197,7 @@ namespace ProjOb
             this._rank = rank;
             _classes = new List<ICourse>();
             InitDictionary();
+            Dictionaries.AddTeacher(this);
         }
 
         public Teacher(string[] names, string surname, ITeacher.TeacherRankEnum rank, string code)
@@ -257,6 +208,7 @@ namespace ProjOb
             this._rank = rank;
             _classes = new List<ICourse>(); 
             InitDictionary();
+            Dictionaries.AddTeacher(this);
         }
 
         public void AddCourse(Course c)
@@ -295,6 +247,7 @@ namespace ProjOb
             this._code = code;
             _classes = new List<ICourse>();
             InitDictionary();
+            Dictionaries.AddStudent(this);
         }
 
         public Student(string[] names, string surname, int semester, string code)
@@ -305,7 +258,9 @@ namespace ProjOb
             this._code = code;
             _classes = new List<ICourse>();
             InitDictionary();
+            Dictionaries.AddStudent(this);
         }
+
         public void AddCourse(Course c)
         {
             _classes.Add(c);

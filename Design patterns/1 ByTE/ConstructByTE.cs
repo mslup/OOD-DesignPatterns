@@ -54,11 +54,6 @@ namespace ProjOb
             Room R73 = new Room(73, IRoom.RoomTypeEnum.laboratory);
             R73.AddCourses(AC3);
 
-            Dictionaries.AddRooms(R107, R204, R21, R123, R404, R504, R73);
-            Dictionaries.AddCourses(MD2, RD, WDK, AC3);
-            Dictionaries.AddStudents(S1, S2, S3, S4, S5);
-            Dictionaries.AddTeachers(P1, P2, P3, P4, P5);
-
             ByTE Uni = new ByTE();
             Uni.AddRooms(R107, R204, R21, R123, R404, R504, R73);
             Uni.AddCourses(MD2, RD, WDK, AC3);

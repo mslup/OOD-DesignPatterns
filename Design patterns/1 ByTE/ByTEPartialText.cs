@@ -56,6 +56,7 @@
             this._number = number;
             this._type = type.ToString();
             this._courses = courses;
+            Dictionaries.AddRoom(new RoomPartialTxtAdapter(this));
         }
     }
 
@@ -78,6 +79,7 @@
             this._code = code;
             this._duration = duration;
             this._people = people;
+            Dictionaries.AddCourse(new CoursePartialTxtAdapter(this));
         }
     }
 
@@ -99,9 +101,8 @@
             this._rank = rank;
             this._code = code;
             this._courses = courses;
+            Dictionaries.AddTeacher(new TeacherPartialTxtAdapter(this));
         }
-
-        
     }
 
     public class StudentPartialTxt
@@ -122,6 +123,7 @@
             this._semester = semester;
             this._code = code;
             this._courses = courses;
+            Dictionaries.AddStudent(new StudentPartialTxtAdapter(this));
         }
     }
 }
