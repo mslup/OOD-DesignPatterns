@@ -1,7 +1,8 @@
 Crucial to the task:
 @todo `add` command
-@todo handle quoted values in `find`
-@todo add objects to dictionaries in constructors
+@body ...
+- handle quoted values in `find`
+- add objects to dictionaries in constructors
 
 Cleanup & cosmetic changes:
 - Exception Invalid argument: print which and command's usage
