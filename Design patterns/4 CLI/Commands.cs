@@ -159,8 +159,8 @@ namespace ProjOb
                 return;
             }
 
-            // handle no requierements...
-            var requirements = new Regex(@"\S+\s*[=><](?:"".*?""|'.*?'|\s*\S+)")
+            // handle no requierements... & merge with list
+            var requirements = new Regex(@"\S+\s*[=><]\s*(?:"".*?""|'.*?'|\S+)")
                 .Matches(tokens[1]);
             var predicates = new List<Comparison>();
 
@@ -228,7 +228,7 @@ namespace ProjOb
             Console.WriteLine("Available fields: '" +
                 string.Join(", ", builder.fieldSetterPairs.Select(x => x.Key)) +
                 "'");
-            Console.WriteLine("Type DONE to confirm creation sor EXIT to abandon.");
+            Console.WriteLine("Type DONE to confirm creation or EXIT to abandon.");
             while (true)
             {
                 Console.Write(CLI.Prompt);
