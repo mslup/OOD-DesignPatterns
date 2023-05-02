@@ -1,6 +1,5 @@
 Crucial to the task:
-@todo `add` command
-@body ...
+- `add` command
 - handle quoted values in `find`
 - add objects to dictionaries in constructors
 
