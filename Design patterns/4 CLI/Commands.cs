@@ -200,7 +200,7 @@ namespace ProjOb
                     }
 
                 }
-                
+
                 if (predicatesSatisfied)
                     Console.WriteLine(pair.Value);
             }
@@ -210,10 +210,22 @@ namespace ProjOb
 
     public class CommandAdd : ICommand
     {
-        
         public string Arguments { get; set; }
         public CommandAdd() => Arguments = "";
-        public void Execute() 
+
+        public Dictionary<string, Dictionary<string, IBuilder>> BuilderDictionary
+            = new Dictionary<string, Dictionary<string, IBuilder>>
+            {
+                { "base", new Dictionary<string, IBuilder>
+                    {
+                        { "room", new RoomBuilder() },
+                        { "course", new CourseBuilder() },
+                        { "teacher", new TeacherBuilder() },
+                        { "student", new StudentBuilder() }
+                    }
+                }
+            };
+        public void Execute()
         {
             string[] tokens = Arguments.Split(' ');
             if (tokens.Length > 2)
@@ -222,7 +234,7 @@ namespace ProjOb
                 return;
             }
 
-            var builder = new RoomBuilder();
+            IBuilder builder = BuilderDictionary[tokens[0]][tokens[1]];
 
             string? input = "";
             Console.WriteLine("Available fields: '" +
@@ -237,16 +249,13 @@ namespace ProjOb
                 if (input == null || input.Length == 0)
                     continue;
 
-                if (input == "DONE")
+                if (input == "DONE" || input == "EXIT")
                 {
                     builder.Build();
-                    Console.WriteLine("Object created.");
-                    break;
-                }
-                if (input == "EXIT")
-                {
-                    builder.Build();
-                    Console.WriteLine("Object creation abandoned.");
+                    if (input == "DONE")
+                        Console.WriteLine("Object created.");
+                    else
+                        Console.WriteLine("Object creation abandoned.");
                     break;
                 }
 
@@ -262,7 +271,7 @@ namespace ProjOb
                     builder.fieldSetterPairs[nameValue[0].Trim()](nameValue[1].Trim());
                 }
                 catch (Exception ex) when (
-                    ex is ArgumentException || 
+                    ex is ArgumentException ||
                     ex is KeyNotFoundException)
                 {
                     Console.WriteLine("Invalid argument");
