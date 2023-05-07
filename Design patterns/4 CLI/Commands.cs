@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Numerics;
 using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -216,14 +217,30 @@ namespace ProjOb
         public Dictionary<string, Dictionary<string, IBuilder>> BuilderDictionary
             = new Dictionary<string, Dictionary<string, IBuilder>>
             {
-                { "base", new Dictionary<string, IBuilder>
-                    {
-                        { "room", new RoomBuilder() },
-                        { "course", new CourseBuilder() },
-                        { "teacher", new TeacherBuilder() },
-                        { "student", new StudentBuilder() }
-                    }
+                { "room", new Dictionary<string, IBuilder>
+                {
+                    { "base", new RoomBuilder() },
+                    { "secondary", new RoomPartialTxtBuilder() }
                 }
+                },
+                { "course", new Dictionary<string, IBuilder>
+                {
+                    { "base", new CourseBuilder() },
+                    { "secondary", new CoursePartialTxtBuilder() }
+                }
+                },
+                { "teacher", new Dictionary<string, IBuilder>
+                {
+                    { "base", new TeacherBuilder() },
+                    { "secondary", new TeacherPartialTxtBuilder() }
+                }
+                },
+                { "student", new Dictionary<string, IBuilder>
+                {
+                    { "base", new StudentBuilder() },
+                    { "secondary", new StudentPartialTxtBuilder() }
+                }
+                },
             };
         public void Execute()
         {
@@ -234,7 +251,18 @@ namespace ProjOb
                 return;
             }
 
-            IBuilder builder = BuilderDictionary[tokens[0]][tokens[1]];
+            string representation = tokens.Length == 2 ? tokens[1] : "base";
+            IBuilder builder;
+            try
+            {
+                builder = BuilderDictionary[tokens[0]][representation];
+            }
+            catch (KeyNotFoundException e) 
+            {
+                Console.WriteLine("Invalid argument");
+                return;
+            }
+            //gettryvalue...
 
             string? input = "";
             Console.WriteLine("Available fields: '" +

@@ -1,11 +1,16 @@
-﻿using System.Security.Cryptography;
+﻿using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ProjOb
 {
+    // issues:
+    // in each TryParse keep old value and assign if parse unsuccesful
     // refactor marker interface
+    // refactor PartialTxtBuilders...
+
     public abstract class IBuilder
     {
         public abstract Dictionary<string, Action<string>>
@@ -15,8 +20,8 @@ namespace ProjOb
 
     public class RoomBuilder : IBuilder
     {
-        private int Number;
-        private IRoom.RoomTypeEnum RoomType;
+        protected int Number;
+        protected IRoom.RoomTypeEnum RoomType;
         public override Dictionary<string, Action<string>> fieldSetterPairs 
         { get; }           
 
@@ -41,7 +46,7 @@ namespace ProjOb
             if (value == null)
                 throw new ArgumentException();
 
-            if (!int.TryParse(value, out Number))
+            if (!Number.SafeTryParse(value))
                 throw new ArgumentException();
         }
 
@@ -51,16 +56,24 @@ namespace ProjOb
                 throw new ArgumentException();
 
             // unwanted behaviour when value > 4
-            if (!Enum.TryParse(value, out RoomType))
+            if (!RoomType.SafeTryParse(value))
                 throw new ArgumentException();
+        }
+    }
+
+    public class RoomPartialTxtBuilder : RoomBuilder
+    {
+        override public object Build()
+        {
+            return new RoomPartialTxt(Number, RoomType.ToString(), "");
         }
     }
 
     public class CourseBuilder : IBuilder
     {
-        private string Name;
-        private string Code;
-        private int Duration;
+        protected string Name;
+        protected string Code;
+        protected int Duration;
         public override Dictionary<string, Action<string>> fieldSetterPairs
         { get; }
 
@@ -103,17 +116,25 @@ namespace ProjOb
             if (value == null)
                 throw new ArgumentException();
 
-            if (!int.TryParse(value, out Duration))
+            if (!Duration.SafeTryParse(value))
                 throw new ArgumentException();
+        }
+    }
+
+    public class CoursePartialTxtBuilder : CourseBuilder
+    {
+        override public object Build()
+        {
+            return new CoursePartialTxt(Name, Code, Duration, "");
         }
     }
 
     public class TeacherBuilder : IBuilder
     {
-        private string[] Names;
-        private string Surname;
-        private string Code;
-        private ITeacher.TeacherRankEnum TeacherRank;
+        protected string[] Names;
+        protected string Surname;
+        protected string Code;
+        protected ITeacher.TeacherRankEnum TeacherRank;
         public override Dictionary<string, Action<string>> fieldSetterPairs
         { get; }
         public TeacherBuilder()
@@ -168,23 +189,33 @@ namespace ProjOb
                 throw new ArgumentException();
 
             // unwanted behaviour same as in RoomBuilder
-            if (!Enum.TryParse(value, out TeacherRank))
+            if (!TeacherRank.SafeTryParse(value))
                 throw new ArgumentException();
+        }
+    }
+
+    public class TeacherPartialTxtBuilder : TeacherBuilder
+    {
+        public override object Build()
+        {
+            return new TeacherPartialTxt(Surname + "," + string.Join(",", Names),
+                TeacherRank.ToString(), Code, "");
         }
     }
 
     public class StudentBuilder : IBuilder
     {
-        private string[] Names;
-        private string Surname;
-        private int Semester;
-        private string Code;
+        protected string[] Names;
+        protected string Surname;
+        protected int Semester;
+        protected string Code;
         public override Dictionary<string, Action<string>> fieldSetterPairs
         { get; }
         public StudentBuilder()
         {
             Names = new string[] { "" };
             Surname = "";
+            Code = "";
             Semester = 0;
             fieldSetterPairs = new Dictionary<string, Action<string>>
             {
@@ -231,32 +262,48 @@ namespace ProjOb
             if (value == null)
                 throw new ArgumentException();
 
-            if (!int.TryParse(value, out Semester))
+            if (!Semester.SafeTryParse(value))
                 throw new ArgumentException();
         }
     }
 
-    //public class RoomPartialTxtBuilder
-    //{
-    //    private int Number;
-    //    private IRoom.RoomTypeEnum RoomType;
-    //    public readonly Dictionary<string, Action<string>> fieldSetterPairs;
+    public class StudentPartialTxtBuilder : StudentBuilder
+    {
+        override public object Build()
+        {
+            return new StudentPartialTxt(Surname + "," + string.Join(",", Names),
+                Semester, Code, "");
+        }
+    }
 
-    //    public RoomPartialTxtBuilder()
-    //    {
-    //        Number = 0;
-    //        RoomType = IRoom.RoomTypeEnum.other;
-    //        fieldSetterPairs = new Dictionary<string, Action<string>>
-    //        {
-    //            { "number", new Action<string>(SetNumber) },
-    //            { "type", new Action<string>(SetRoomType) },
-    //        };
-    //    }
+    public static class EnumExtension
+    {
+        public static bool SafeTryParse<TEnum>(this ref TEnum Field, 
+            string value) where TEnum : struct
+        {
+            TEnum oldValue = Field;
+            if (!Enum.TryParse(value, out Field))
+            {
+                Field = oldValue;
+                return false;
+            }
+            return true;
+        }
+    }
 
-    //    public RoomPartialTxtAdapter Build()
-    //    {
-    //        return new RoomPartialTxtAdapter(
-    //            new RoomPartialTxt());
-    //    }
-    //}
+    public static class IntExtension
+    {
+        public static bool SafeTryParse(this ref int Field,
+            string value)
+        {
+            int oldValue = Field;
+            if (!int.TryParse(value, out Field))
+            {
+                Field = oldValue;
+                return false;
+            }
+            return true;
+        }
+    }
+
 }
