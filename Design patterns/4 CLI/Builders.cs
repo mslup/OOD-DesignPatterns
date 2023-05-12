@@ -7,34 +7,39 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ProjOb
 {
-    public interface IBuilder 
+    public interface IBuilder
     {
-        public Dictionary<string, Action<string>> fieldSetterPairs { get; }
-        public object Build(); // refactor 'object'
-        public object Update(object t); // as above
+        public Dictionary<string, Action<string>> Setters { get; }
+        public Dictionary<string, Func<object>> BuildMethods { get; }
+        public object Update(object t);
     }
 
     public class RoomBuilder : IBuilder
     {
         protected int Number;
         protected IRoom.RoomTypeEnum RoomType;
-        public Dictionary<string, Action<string>> fieldSetterPairs
-        { get; }
-        public Dictionary<string, bool> updatedFields;
+        public Dictionary<string, Action<string>> Setters { get; }
+        public Dictionary<string, Func<object>> BuildMethods { get; }
+        private Dictionary<string, bool> updatedFields;
 
         public RoomBuilder()
         {
             Number = 0;
             RoomType = IRoom.RoomTypeEnum.other;
-            fieldSetterPairs = new Dictionary<string, Action<string>>
+            Setters = new Dictionary<string, Action<string>>
             {
-                { "number", SetNumber },
-                { "type", SetRoomType },
+                ["number"] = SetNumber,
+                ["type"] = SetRoomType,
+            };
+            BuildMethods = new Dictionary<string, Func<object>>
+            {
+                ["base"] = Build,
+                ["secondary"] = BuildPartialTxt
             };
             updatedFields = new Dictionary<string, bool>
             {
-                { "number", false },
-                { "type", false}
+                ["number"] = false,
+                ["type"] = false
             };
         }
 
@@ -61,13 +66,18 @@ namespace ProjOb
             updatedFields["type"] = true;
         }
 
-        public object Build()
+        public IRoom Build()
         {
             return new Room(Number, RoomType);
         }
+        public IRoom BuildPartialTxt()
+        {
+            return new RoomPartialTxtAdapter(
+                new RoomPartialTxt(Number, RoomType.ToString(), ""));
+        }
 
         public object Update(object room)
-        { 
+        {
             if (updatedFields["number"])
                 (room as IRoom).Number = Number;
             if (updatedFields["type"])
@@ -77,32 +87,32 @@ namespace ProjOb
         }
     }
 
-    public class RoomPartialTxtBuilder : RoomBuilder
-    {
-        public RoomPartialTxt Build() // to do
-        {
-            return new RoomPartialTxt(Number, RoomType.ToString(), "");
-        }
-    }
 
     public class CourseBuilder : IBuilder
     {
         protected string Name;
         protected string Code;
         protected int Duration;
-        public Dictionary<string, Action<string>> fieldSetterPairs { get; }
-        public Dictionary<string, bool> updatedFields;
+        public Dictionary<string, Action<string>> Setters { get; }
+        public Dictionary<string, Func<object>> BuildMethods { get; }
+
+        private Dictionary<string, bool> updatedFields;
 
         public CourseBuilder()
         {
             Name = "";
             Code = "";
             Duration = 0;
-            fieldSetterPairs = new Dictionary<string, Action<string>>
+            Setters = new Dictionary<string, Action<string>>
             {
                 { "name", SetName },
                 { "code", SetCode },
                 { "duration", SetDuration }
+            };
+            BuildMethods = new Dictionary<string, Func<object>>
+            {
+                ["base"] = Build,
+                ["secondary"] = BuildPartialTxt
             };
             updatedFields = new Dictionary<string, bool>
             {
@@ -112,9 +122,14 @@ namespace ProjOb
             };
         }
 
-        public object Build()
+        public ICourse Build()
         {
             return new Course(Name, Code, Duration);
+        }
+        public ICourse BuildPartialTxt()
+        {
+            return new CoursePartialTxtAdapter(
+                new CoursePartialTxt(Name, Code, Duration, ""));
         }
 
         public void SetName(string value)
@@ -123,6 +138,8 @@ namespace ProjOb
                 throw new ArgumentException();
 
             Name = value;
+
+            updatedFields["name"] = true;
         }
 
         public void SetCode(string value)
@@ -131,6 +148,8 @@ namespace ProjOb
                 throw new ArgumentException();
 
             Code = value;
+
+            updatedFields["code"] = true;
         }
 
         public void SetDuration(string value)
@@ -140,6 +159,8 @@ namespace ProjOb
 
             if (!Duration.SafeTryParse(value))
                 throw new ArgumentException();
+
+            updatedFields["duration"] = true;
         }
 
         public object Update(object course)
@@ -155,22 +176,16 @@ namespace ProjOb
         }
     }
 
-    public class CoursePartialTxtBuilder : CourseBuilder
-    {
-        public CoursePartialTxt Build()
-        {
-            return new CoursePartialTxt(Name, Code, Duration, "");
-        }
-    }
-
     public class TeacherBuilder : IBuilder
     {
         protected string[] Names;
         protected string Surname;
         protected string Code;
         protected ITeacher.TeacherRankEnum TeacherRank;
-        public Dictionary<string, Action<string>> fieldSetterPairs { get; }
-        public Dictionary<string, bool> updatedFields;
+        public Dictionary<string, Action<string>> Setters { get; }
+        public Dictionary<string, Func<object>> BuildMethods { get; }
+
+        private Dictionary<string, bool> updatedFields;
 
         public TeacherBuilder()
         {
@@ -178,12 +193,17 @@ namespace ProjOb
             Surname = "";
             Code = "";
             TeacherRank = ITeacher.TeacherRankEnum.KiB;
-            fieldSetterPairs = new Dictionary<string, Action<string>>
+            Setters = new Dictionary<string, Action<string>>
             {
                 { "names", SetNames },
                 { "surname", SetSurname },
                 { "code", SetCode },
                 { "rank", SetTeacherRank }
+            };
+            BuildMethods = new Dictionary<string, Func<object>>
+            {
+                ["base"] = Build,
+                ["secondary"] = BuildPartialTxt
             };
             updatedFields = new Dictionary<string, bool>
             {
@@ -194,9 +214,15 @@ namespace ProjOb
             };
         }
 
-        public object Build()
+        public ITeacher Build()
         {
             return new Teacher(Names, Surname, TeacherRank, Code);
+        }
+        public ITeacher BuildPartialTxt()
+        {
+            return new TeacherPartialTxtAdapter(
+                new TeacherPartialTxt(Surname + "," + string.Join(",", Names),
+                TeacherRank.ToString(), Code, ""));
         }
 
         public object Update(object teacher)
@@ -221,6 +247,8 @@ namespace ProjOb
             Names = value.Split(",")
                     .Select(str => str.Trim())
                     .ToArray();
+
+            updatedFields["names"] = true;
         }
 
         public void SetSurname(string value)
@@ -229,6 +257,8 @@ namespace ProjOb
                 throw new ArgumentException();
 
             Surname = value;
+
+            updatedFields["surname"] = true;
         }
 
         public void SetCode(string value)
@@ -237,6 +267,8 @@ namespace ProjOb
                 throw new ArgumentException();
 
             Code = value;
+
+            updatedFields["code"] = true;
         }
 
         public void SetTeacherRank(string value)
@@ -247,17 +279,11 @@ namespace ProjOb
             // unwanted behaviour same as in RoomBuilder
             if (!TeacherRank.SafeTryParse(value))
                 throw new ArgumentException();
+
+            updatedFields["rank"] = true;
         }
     }
 
-    public class TeacherPartialTxtBuilder : TeacherBuilder
-    {
-        public TeacherPartialTxt Build()
-        {
-            return new TeacherPartialTxt(Surname + "," + string.Join(",", Names),
-                TeacherRank.ToString(), Code, "");
-        }
-    }
 
     public class StudentBuilder : IBuilder
     {
@@ -265,21 +291,28 @@ namespace ProjOb
         protected string Surname;
         protected int Semester;
         protected string Code;
-        public Dictionary<string, Action<string>> fieldSetterPairs
+        public Dictionary<string, Action<string>> Setters
         { get; }
-        public Dictionary<string, bool> updatedFields;
+        public Dictionary<string, Func<object>> BuildMethods { get; }
+
+        private Dictionary<string, bool> updatedFields;
         public StudentBuilder()
         {
             Names = new string[] { "" };
             Surname = "";
             Code = "";
             Semester = 0;
-            fieldSetterPairs = new Dictionary<string, Action<string>>
+            Setters = new Dictionary<string, Action<string>>
             {
                 { "names", SetNames },
                 { "surname", SetSurname },
                 { "code", SetCode },
                 { "semester", SetSemester }
+            };
+            BuildMethods = new Dictionary<string, Func<object>>
+            {
+                ["base"] = Build,
+                ["secondary"] = BuildPartialTxt
             };
             updatedFields = new Dictionary<string, bool>
             {
@@ -290,9 +323,15 @@ namespace ProjOb
             };
         }
 
-        public object Build()
+        public IStudent Build()
         {
             return new Student(Names, Surname, Semester, Code);
+        }
+        public IStudent BuildPartialTxt()
+        {
+            return new StudentPartialTxtAdapter(
+                new StudentPartialTxt(Surname + "," + string.Join(",", Names),
+                Semester, Code, ""));
         }
 
         public object Update(object student)
@@ -317,6 +356,8 @@ namespace ProjOb
             Names = value.Split(",")
                     .Select(str => str.Trim())
                     .ToArray();
+
+            updatedFields["names"] = true;
         }
 
         public void SetSurname(string value)
@@ -325,6 +366,8 @@ namespace ProjOb
                 throw new ArgumentException();
 
             Surname = value;
+
+            updatedFields["surname"] = true;
         }
 
         public void SetCode(string value)
@@ -333,6 +376,8 @@ namespace ProjOb
                 throw new ArgumentException();
 
             Code = value;
+
+            updatedFields["code"] = true;
         }
 
         public void SetSemester(string value)
@@ -342,16 +387,14 @@ namespace ProjOb
 
             if (!Semester.SafeTryParse(value))
                 throw new ArgumentException();
+
+            updatedFields["semester"] = true;
         }
     }
 
     public class StudentPartialTxtBuilder : StudentBuilder
     {
-        public StudentPartialTxt Build()
-        {
-            return new StudentPartialTxt(Surname + "," + string.Join(",", Names),
-                Semester, Code, "");
-        }
+
     }
 
     public static class EnumExtension

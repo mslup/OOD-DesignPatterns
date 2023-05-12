@@ -13,6 +13,9 @@ namespace ProjOb
         public static Dictionary<string, IStudent> StudentDict
             = new Dictionary<string, IStudent>();
 
+        public static HashSet<string> Representations => 
+            new () { "base", "secondary" };
+
         public static readonly Dictionary<string, IDictionary?>
             objectDictionary = new Dictionary<string, IDictionary?>
             {
@@ -26,22 +29,22 @@ namespace ProjOb
                 { "students", StudentDict },
             };
 
-        static public void AddRoom(IRoom room)
+        static public void Add(IRoom room)
         {
             RoomDict[room.Number.ToString()] = room;
         }
 
-        static public void AddCourse(ICourse course)
+        static public void Add(ICourse course)
         {
             CourseDict[course.Code] = course;
         }
 
-        static public void AddTeacher(ITeacher teacher)
+        static public void Add(ITeacher teacher)
         {
             TeacherDict[teacher.Code] = teacher;
         }
 
-        static public void AddStudent(IStudent student)
+        static public void Add(IStudent student)
         {
             StudentDict[student.Code] = student;
         }

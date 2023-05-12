@@ -9,9 +9,12 @@ namespace ProjOb
             return "\u001b[1m" + str + "\u001b[0m";
         }
     }
-}
 
-/*
- * @todo test...
- * @body test...
- */
+    public static class StringExtension
+    {
+        public static string TrimWQ(this string str)
+        {
+            return str.Trim(' ', '\t', '\n', '\r', '\'', '"');
+        }
+    }
+}

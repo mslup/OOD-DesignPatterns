@@ -12,7 +12,7 @@ namespace ProjOb
     {
         string Representation { get; }
         IComparable GetFieldByName(string name);
-        string GetFieldTypeByName(string name);
+        static string GetFieldTypeByName(string name) { return ""; }
     }
 
     public partial class Room
@@ -40,7 +40,7 @@ namespace ProjOb
             return nameFieldPairs[name];
         }
 
-        public string GetFieldTypeByName(string name)
+        public static string GetFieldTypeByName(string name)
         {
             return nameTypePairs[name];
         }
@@ -71,7 +71,7 @@ namespace ProjOb
             return nameFieldPairs[name];
         }
 
-        public string GetFieldTypeByName(string name)
+        public static string GetFieldTypeByName(string name)
         {
             return nameTypePairs[name];
         }
@@ -104,7 +104,7 @@ namespace ProjOb
             return nameFieldPairs[name];
         }
 
-        public string GetFieldTypeByName(string name)
+        public static string GetFieldTypeByName(string name)
         {
             return nameTypePairs[name];
         }
@@ -137,7 +137,7 @@ namespace ProjOb
             return nameFieldPairs[name];
         }
 
-        public string GetFieldTypeByName(string name)
+        public static string GetFieldTypeByName(string name)
         {
             return nameTypePairs[name];
         }
@@ -174,7 +174,7 @@ namespace ProjOb
             return nameFieldPairs[name];
         }
 
-        public string GetFieldTypeByName(string name)
+        public static string GetFieldTypeByName(string name)
         {
             return nameTypePairs[name];
         }
@@ -211,7 +211,7 @@ namespace ProjOb
             return nameFieldPairs[name];
         }
 
-        public string GetFieldTypeByName(string name)
+        public static string GetFieldTypeByName(string name)
         {
             return nameTypePairs[name];
         }
@@ -248,7 +248,7 @@ namespace ProjOb
             return nameFieldPairs[name];
         }
 
-        public string GetFieldTypeByName(string name)
+        public static string GetFieldTypeByName(string name)
         {
             return nameTypePairs[name];
         }
@@ -283,7 +283,7 @@ namespace ProjOb
             return nameFieldPairs[name];
         }
 
-        public string GetFieldTypeByName(string name)
+        public static string GetFieldTypeByName(string name)
         {
             return nameTypePairs[name];
         }

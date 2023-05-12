@@ -105,7 +105,7 @@ namespace ProjOb
             RoomType = type;
             Courses = new List<ICourse>();
             InitDictionary();
-            Dictionaries.AddRoom(this);
+            Dictionaries.Add(this);
         }
 
         public void AddCourses(params Course[] courses)
@@ -138,7 +138,7 @@ namespace ProjOb
             Teachers = new List<ITeacher>();
             Students = new List<IStudent>();
             InitDictionary();
-            Dictionaries.AddCourse(this);
+            Dictionaries.Add(this);
         }
 
         public void LinkTeachers(params Teacher[] teachers)
@@ -183,7 +183,7 @@ namespace ProjOb
             TeacherRank = rank;
             Courses = new List<ICourse>();
             InitDictionary();
-            Dictionaries.AddTeacher(this);
+            Dictionaries.Add(this);
         }
 
         public Teacher(string[] names, string surname, ITeacher.TeacherRankEnum rank, string code)
@@ -194,7 +194,7 @@ namespace ProjOb
             TeacherRank = rank;
             Courses = new List<ICourse>();
             InitDictionary();
-            Dictionaries.AddTeacher(this);
+            Dictionaries.Add(this);
         }
 
         public void AddCourse(Course c)
@@ -227,7 +227,7 @@ namespace ProjOb
             Code = code;
             Courses = new List<ICourse>();
             InitDictionary();
-            Dictionaries.AddStudent(this);
+            Dictionaries.Add(this);
         }
 
         public Student(string[] names, string surname, int semester, string code)
@@ -238,7 +238,7 @@ namespace ProjOb
             Code = code;
             Courses = new List<ICourse>();
             InitDictionary();
-            Dictionaries.AddStudent(this);
+            Dictionaries.Add(this);
         }
 
         public void AddCourse(Course c)

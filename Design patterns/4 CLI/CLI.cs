@@ -11,10 +11,8 @@
             { "edit", () => new CommandEdit() }
         };
 
-        public ICommand? BuildCommand(string? arg)
-        {
-            if (arg == null) return null;
-
+        public ICommand? BuildCommand(string arg)
+        { 
             arg = arg.Trim();
             string[] tokens = arg.Split(' ', 2);
 
@@ -41,6 +39,7 @@
             ByTE.ConstructByTE();
             Console.WriteLine("Application ByTE");
 
+            var queue = new CommandQueue();
             var factory = new CommandFactory();
 
             while (true)
@@ -48,18 +47,28 @@
                 Console.Write(Prompt);
                 string? arg = Console.ReadLine();
 
-                if (arg == "exit")
+                if (arg == null || arg.Length == 0)
+                    continue;
+
+                if (arg.ToLower() == "exit")
                     break;
-
+                
                 var command = factory.BuildCommand(arg);
+
+                if (arg.StartsWith("queue"))
+                {
+                    queue.HandleQueueCommand(arg);
+                    continue;
+                }
+
                 if (command != null)
-                    command.Execute();
+                {
+                    if (command.Preprocess())
+                        queue.Push(command);
+                }
                 else
-                    Console.WriteLine("No such command");
+                    Console.WriteLine($"Unrecognized command: {arg.Trim().Split(' ')[0]}");
             }
-
         }
-
-
     }
 }

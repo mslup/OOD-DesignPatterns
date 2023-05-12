@@ -8,6 +8,11 @@ namespace ProjOb
 {
     static class IteratorTest
     {
+        public static void Print<T>(INewCollection<T> collection)
+        {
+            ForEach(collection, x => Console.WriteLine(x));
+        }
+
         public static object? Find<T>(INewCollection<T> collection, Predicate<T> predicate)
         {
             IIterator<T> it = collection.GetForwardsIterator();
@@ -23,7 +28,7 @@ namespace ProjOb
             return null;
         }
 
-        public static object? ForEach<T>(INewCollection<T> collection, Action<T> action)
+        public static void ForEach<T>(INewCollection<T> collection, Action<T> action)
         {
             IIterator<T> it = collection.GetForwardsIterator();
             T val;
@@ -33,8 +38,6 @@ namespace ProjOb
                 val = it.GetNext();
                 action(val);
             }
-
-            return null;
         }
 
         public static int CountIf<T>(INewCollection<T> collection, Predicate<T> predicate)

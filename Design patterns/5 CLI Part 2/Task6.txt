@@ -1,0 +1,41 @@
+For this part of the project, your task is to extend the commands mechanism with
+queue and commits.
+From now, each performed command is not executed immediately after their call but
+instead of it, it is added to the command queue. The commands on the queue can be
+listed (each of the commands should now implement ToString() method), exported 
+(saved to the XML file or plain text – the same format as it was called in the 
+command line), and finally, committed. The 'queue ...' commands and 'exit' are not
+added to the queue and are executed immediatly.
+
+IMPORTANT: Implemented commands must interact with previously created data and use 
+implemented collections!
+
+These are the commands that you are required to implement during this task:
+
+1.	edit <name_of_the_class> [<requirement> …] - edits values of the given record.
+
+This command allows editing a given record if requirement conditions (which work the
+same as in the find command) specify one record uniquely. Editing works the same as
+adding a new element
+	<name_of_field>=<value>
+replace the field's old value with a new one until DONE or EXIT is provided. When 
+EXIT is chosen, it does not modify any value.
+
+2.	queue print – prints all commands currently stored in the queue
+
+This command should print each stored in queue commands its name and all command
+parameters in human-readable form.
+
+3.	queue export {filename} [format] – exports all commands currently stored in 
+the queue to the specified file
+
+This command saves all commands from the queue to the file. There are supported 
+two formats "XML" (default) and "plaintext". The structure of XML should contain 
+only necessary fields. The plain text format should be the same as it is in the
+command line – that means that pasting the content of the file to the console 
+should add stored commands.
+
+4.	queue commit – execute all commands from the queue
+
+This command executes all commands stored in the queue in order of their 
+addition. After that queue should be cleared and proper collection modified.
