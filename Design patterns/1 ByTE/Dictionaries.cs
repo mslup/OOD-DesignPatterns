@@ -16,9 +16,13 @@ namespace ProjOb
         public static readonly Dictionary<string, IDictionary?>
             objectDictionary = new Dictionary<string, IDictionary?>
             {
+                { "room", RoomDict },
                 { "rooms", RoomDict },
+                { "course", CourseDict },
                 { "courses", CourseDict },
+                { "teacher", TeacherDict },
                 { "teachers", TeacherDict },
+                { "student", StudentDict },
                 { "students", StudentDict },
             };
 

@@ -2,15 +2,14 @@
 {
     public class CommandFactory
     {
-        public static readonly Dictionary<string, ICommand> CommandDictionary
-            = new Dictionary<string, ICommand>
+        public static readonly Dictionary<string, Func<ICommand>> CommandDictionary
+            = new Dictionary<string, Func<ICommand>>
         {
-            { "list", new CommandList() },
-            { "find", new CommandFind() },
-            { "add",  new CommandAdd() }
+            { "list", () => new CommandList() },
+            { "find", () => new CommandFind() },
+            { "add", () => new CommandAdd() },
+            { "edit", () => new CommandEdit() }
         };
-
-        //private CommandBuilder builder = new CommandBuilder();
 
         public ICommand? BuildCommand(string? arg)
         {
@@ -19,8 +18,9 @@
             arg = arg.Trim();
             string[] tokens = arg.Split(' ', 2);
 
-            if (CommandDictionary.TryGetValue(tokens[0], out ICommand? command))
+            if (CommandDictionary.TryGetValue(tokens[0], out Func<ICommand>? commandConstructor))
             {
+                ICommand command = commandConstructor();
                 if (tokens.Length > 1)
                     command.Arguments = tokens[1];
                 else

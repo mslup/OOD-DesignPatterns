@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 using static ProjOb.IRoom;
 using static ProjOb.ITeacher;
 
@@ -78,9 +79,18 @@ namespace ProjOb
             InitDictionary();
         }
 
-        public int Number => adaptee.Number;
+        public int Number
+        {
+            get => adaptee.Number;
+            set => adaptee.Number = value;
+        }
         public IRoom.RoomTypeEnum RoomType
-            => (RoomTypeEnum)Enum.Parse(typeof(RoomTypeEnum), adaptee.RoomType, true);
+        {
+            get => (RoomTypeEnum)Enum.Parse(typeof(RoomTypeEnum), adaptee.RoomType, true);
+            set => adaptee.RoomType = value.ToString();
+        }
+
+        public string Representation { get => adaptee.Representation; }
 
         public List<ICourse> Courses
         {
@@ -124,9 +134,28 @@ namespace ProjOb
             InitDictionary();
         }
 
-        public string Name => adaptee.Name;
-        public string Code => adaptee.Code;
-        public int Duration => adaptee.Duration;
+        public string Name
+        {
+            get => adaptee.Name;
+            set => adaptee.Name = value;
+        }
+
+        public string Code
+        {
+            get => adaptee.Code;
+            set => adaptee.Code = value;
+        }
+
+        public int Duration
+        {
+            get => adaptee.Duration;
+            set => adaptee.Duration = value;
+        }
+        public string Representation
+        {
+            get => adaptee.Representation;
+        }
+
         public List<ITeacher> Teachers
         {
             get
@@ -210,6 +239,11 @@ namespace ProjOb
 
                 return ret;
             }
+            set
+            {
+                string[] identity = adaptee.Identity.Split(",", 2);
+                adaptee.Identity = identity[0] + "," + string.Join(",", value);
+            }
         }
 
         public string Surname
@@ -221,12 +255,29 @@ namespace ProjOb
 
                 return groups["surname"].Value;
             }
+            set
+            {
+                string[] identity = adaptee.Identity.Split(",", 2);
+                adaptee.Identity = value + "," + identity[1];
+            }
         }
 
-        public string Code => adaptee.Code;
+        public string Code
+        {
+            get => adaptee.Code;
+            set => adaptee.Code = value;
+        }
 
-        public TeacherRankEnum TeacherRank 
-            => (TeacherRankEnum)Enum.Parse(typeof(TeacherRankEnum), adaptee.Rank, true);
+        public TeacherRankEnum TeacherRank
+        {
+            get => (TeacherRankEnum)Enum.Parse(typeof(TeacherRankEnum), adaptee.Rank, true);
+            set => adaptee.Rank = value.ToString();
+        }
+
+        public string Representation
+        {
+            get => adaptee.Representation;
+        }
 
         public List<ICourse> Courses
         {
@@ -288,6 +339,11 @@ namespace ProjOb
 
                 return ret;
             }
+            set
+            {
+                string[] identity = adaptee.Identity.Split(",", 2);
+                adaptee.Identity = identity[0] + "," + string.Join(",", value);
+            }
         }
 
         public string Surname
@@ -299,11 +355,30 @@ namespace ProjOb
 
                 return groups["surname"].Value;
             }
+            set
+            {
+                string[] identity = adaptee.Identity.Split(",", 2);
+                adaptee.Identity = value + "," + identity[1];
+            }
         }
 
-        public string Code => adaptee.Code;
+        public string Code
+        {
+            get => adaptee.Code;
+            set => adaptee.Code = value;
+        }
 
-        public int Semester => adaptee.Semester;
+
+        public int Semester
+        {
+            get => adaptee.Semester;
+            set => adaptee.Semester = value;
+        }
+
+        public string Representation
+        {
+            get => adaptee.Representation;
+        }
 
         public List<ICourse> Courses
         {

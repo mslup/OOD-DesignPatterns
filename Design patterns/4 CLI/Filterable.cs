@@ -10,6 +10,7 @@ namespace ProjOb
 {
     public interface IFilterable
     {
+        string Representation { get; }
         IComparable GetFieldByName(string name);
         string GetFieldTypeByName(string name);
     }

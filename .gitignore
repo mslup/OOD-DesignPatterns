@@ -396,4 +396,8 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# User-defined
 /Design patterns/4 CLI/MinExample.cs
+/ankieta.txt
+/Abandoned

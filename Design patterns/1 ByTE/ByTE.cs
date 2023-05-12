@@ -6,7 +6,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 using static ProjOb.Teacher;
 
 namespace ProjOb
-{ 
+{
     public partial class ByTE : IByTE
     {
         private List<IRoom> rooms;
@@ -93,20 +93,17 @@ namespace ProjOb
 
     public partial class Room : IRoom
     {
-        private int _number;
-        private IRoom.RoomTypeEnum _type;
-        private List<ICourse> _classes;
+        public int Number { get; set; }
+        public IRoom.RoomTypeEnum RoomType { get; set; }
+        public List<ICourse> Courses { get; set; }
 
-        public int Number { get => _number; }
-        public IRoom.RoomTypeEnum RoomType { get => _type; }
-        public List<ICourse> Courses { get => _classes; }
-
+        public string Representation { get => "base"; }
 
         public Room(int number, IRoom.RoomTypeEnum type)
         {
-            this._number = number;
-            this._type = type;
-            this._classes = new List<ICourse>();
+            Number = number;
+            RoomType = type;
+            Courses = new List<ICourse>();
             InitDictionary();
             Dictionaries.AddRoom(this);
         }
@@ -116,35 +113,30 @@ namespace ProjOb
             foreach (var c in courses)
                 AddCourse(c);
         }
-        public void AddCourse(Course c) { _classes.Add(c); }
+        public void AddCourse(Course c) { Courses.Add(c); }
 
         public override string ToString()
         {
             return $"{Number}, {RoomType}, " +
-                $"[{string.Join(", ", Courses.Select(course => course.Code))}]"; 
-        }        
+                $"[{string.Join(", ", Courses.Select(course => course.Code))}]";
+        }
     }
     public partial class Course : ICourse
     {
-        private string _name;
-        private string _code;
-        private int _duration;
-        private List<ITeacher> _teachers;
-        private List<IStudent> _students;
-
-        public string Name { get => _name; }
-        public string Code { get => _code; }
-        public int Duration { get => _duration; }
-        public List<ITeacher> Teachers { get => _teachers; }
-        public List<IStudent> Students { get => _students; }
+        public string Name { get; set; }
+        public string Code { get; set; }
+        public int Duration { get; set; }
+        public List<ITeacher> Teachers { get; set; }
+        public List<IStudent> Students { get; set; }
+        public string Representation { get => "base"; }
 
         public Course(string name, string code, int duration)
         {
-            this._name = name;
-            this._code = code;
-            this._duration = duration;
-            _teachers = new List<ITeacher>();
-            _students = new List<IStudent>();
+            Name = name;
+            Code = code;
+            Duration = duration;
+            Teachers = new List<ITeacher>();
+            Students = new List<IStudent>();
             InitDictionary();
             Dictionaries.AddCourse(this);
         }
@@ -153,7 +145,7 @@ namespace ProjOb
         {
             foreach (var teacher in teachers)
             {
-                _teachers.Add(teacher);
+                Teachers.Add(teacher);
                 teacher.AddCourse(this);
             }
         }
@@ -161,7 +153,7 @@ namespace ProjOb
         {
             foreach (var student in students)
             {
-                _students.Add(student);
+                Students.Add(student);
                 student.AddCourse(this);
             }
         }
@@ -176,44 +168,38 @@ namespace ProjOb
     }
     public partial class Teacher : ITeacher
     {
-        private List<string> _names;
-        private string _surname;
-        private ITeacher.TeacherRankEnum _rank;
-        private string _code;
-        private List<ICourse> _classes;
-
-        public List<string> Names { get => _names; }
-        public string Surname { get => _surname; }
-        public string Code { get => _code; }
-        public ITeacher.TeacherRankEnum TeacherRank { get => _rank; }
-        public List<ICourse> Courses { get => _classes; }
+        public List<string> Names { get; set; }
+        public string Surname { get; set; }
+        public string Code { get; set; }
+        public ITeacher.TeacherRankEnum TeacherRank { get; set; }
+        public List<ICourse> Courses { get; set; }
+        public string Representation { get => "base"; }
 
         public Teacher(string name, string surname, ITeacher.TeacherRankEnum rank, string code)
         {
-            _names = new List<string>();
-            _names.Add(name);
-            this._surname = surname;
-            this._code = code;
-            this._rank = rank;
-            _classes = new List<ICourse>();
+            Names = new List<string> { name };
+            Surname = surname;
+            Code = code;
+            TeacherRank = rank;
+            Courses = new List<ICourse>();
             InitDictionary();
             Dictionaries.AddTeacher(this);
         }
 
         public Teacher(string[] names, string surname, ITeacher.TeacherRankEnum rank, string code)
         {
-            this._names = names.ToList();
-            this._surname = surname;
-            this._code = code;
-            this._rank = rank;
-            _classes = new List<ICourse>(); 
+            Names = names.ToList();
+            Surname = surname;
+            Code = code;
+            TeacherRank = rank;
+            Courses = new List<ICourse>();
             InitDictionary();
             Dictionaries.AddTeacher(this);
         }
 
         public void AddCourse(Course c)
         {
-            _classes.Add(c);
+            Courses.Add(c);
         }
 
         public override string ToString()
@@ -226,44 +212,38 @@ namespace ProjOb
     }
     public partial class Student : IStudent
     {
-        private List<string> _names;
-        private string _surname;
-        private int _semester;
-        private string _code;
-        private List<ICourse> _classes;
-
-        public List<string> Names { get => _names; }
-        public string Surname { get => _surname; }
-        public string Code { get => _code; }
-        public int Semester { get => _semester; }
-        public List<ICourse> Courses { get => _classes; }
+        public List<string> Names { get; set; }
+        public string Surname { get; set; }
+        public string Code { get; set; }
+        public int Semester { get; set; }
+        public List<ICourse> Courses { get; set; }
+        public string Representation { get => "base"; }
 
         public Student(string name, string surname, int semester, string code)
         {
-            _names = new List<string>();
-            _names.Add(name);
-            this._surname = surname;
-            this._semester = semester;
-            this._code = code;
-            _classes = new List<ICourse>();
+            Names = new List<string>() { name };
+            Surname = surname;
+            Semester = semester;
+            Code = code;
+            Courses = new List<ICourse>();
             InitDictionary();
             Dictionaries.AddStudent(this);
         }
 
         public Student(string[] names, string surname, int semester, string code)
         {
-            this._names = names.ToList();
-            this._surname = surname;
-            this._semester = semester;
-            this._code = code;
-            _classes = new List<ICourse>();
+            Names = names.ToList();
+            Surname = surname;
+            Semester = semester;
+            Code = code;
+            Courses = new List<ICourse>();
             InitDictionary();
             Dictionaries.AddStudent(this);
         }
 
         public void AddCourse(Course c)
         {
-            _classes.Add(c);
+            Courses.Add(c);
         }
 
         public override string ToString()
@@ -274,5 +254,5 @@ namespace ProjOb
         }
     }
 
-   
+
 }

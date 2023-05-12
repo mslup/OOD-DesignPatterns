@@ -43,86 +43,71 @@
 
     public class RoomPartialTxt
     {
-        private int _number;
-        private string _type;
-        private string _courses;
-
-        public int Number { get => _number; }
-        public string RoomType { get => _type; }
-        public string Courses { get => _courses; }
+        public int Number { get; set; }
+        public string RoomType { get; set; }
+        public string Courses { get; set; }
+        public string Representation { get => "secondary"; }
 
         public RoomPartialTxt(int number, string type, string courses)
         {
-            this._number = number;
-            this._type = type.ToString();
-            this._courses = courses;
+            Number = number;
+            RoomType = type.ToString();
+            Courses = courses;
             Dictionaries.AddRoom(new RoomPartialTxtAdapter(this));
         }
     }
 
     public class CoursePartialTxt
     {
-        private string _name;
-        private string _code;
-        private int _duration;
-        private string _people;
-
-        public string Name { get => _name; }
-        public string Code { get => _code; }
-        public int Duration { get => _duration; }
-        public string People { get => _people; }
+        public string Name { get; set; }
+        public string Code { get; set; }
+        public int Duration { get; set; }
+        public string People { get; set; }
+        public string Representation { get => "secondary"; }
 
         public CoursePartialTxt(string name, string code, int duration,
             string people)
         {
-            this._name = name;
-            this._code = code;
-            this._duration = duration;
-            this._people = people;
+            Name = name;
+            Code = code;
+            Duration = duration;
+            People = people;
             Dictionaries.AddCourse(new CoursePartialTxtAdapter(this));
         }
     }
 
     public class TeacherPartialTxt
     {
-        private string _identity;
-        private string _rank;
-        private string _code;
-        private string _courses;
-
-        public string Identity { get => _identity; }
-        public string Rank { get => _rank; }
-        public string Code { get => _code; }
-        public string Courses { get => _courses; }
+        public string Identity { get; set; }
+        public string Rank { get; set; }
+        public string Code { get; set; }
+        public string Courses { get; set; }
+        public string Representation { get => "secondary"; }
 
         public TeacherPartialTxt(string identity, string rank, string code, string courses)
         {
-            this._identity = identity;
-            this._rank = rank;
-            this._code = code;
-            this._courses = courses;
+            Identity = identity;
+            Rank = rank;
+            Code = code;
+            Courses = courses;
             Dictionaries.AddTeacher(new TeacherPartialTxtAdapter(this));
         }
     }
 
     public class StudentPartialTxt
     {
-        private string _identity;
-        private int _semester;
-        private string _code;
-        private string _courses;
-
-        public string Identity { get => _identity; }
-        public int Semester { get => _semester; }
-        public string Code { get => _code; }
-        public string Courses { get => _courses; }
+        public string Identity { get; set; }
+        public int Semester { get; set; }
+        public string Code { get; set; }
+        public string Courses { get; set; }
+        public string Representation { get => "secondary"; }
 
         public StudentPartialTxt(string identity, int semester, string code, string courses)
         {
-            this._identity = identity;
-            this._semester = semester;
-            this._code = code;
-            this._courses = courses;
+            Identity = identity;
+            Semester = semester;
+            Code = code;
+            Courses = courses;
             Dictionaries.AddStudent(new StudentPartialTxtAdapter(this));
         }
     }

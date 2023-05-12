@@ -6,12 +6,7 @@ using System.Threading.Tasks;
 
 namespace ProjOb
 {
-    public static class Program
+    internal class CommandQueue
     {
-        public static void Main() 
-        {
-            CLI.RunApp();
-            //MinExample.Run();
-        }
     }
 }

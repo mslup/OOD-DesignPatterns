@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Numerics;
 using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
@@ -15,6 +16,11 @@ namespace ProjOb
         //public string ToString();
     }
 
+    public static class CommmandLogic
+    {
+        // ...
+    }
+
     public class CommandList : ICommand
     {
         public string Arguments { get; set; }
@@ -26,7 +32,6 @@ namespace ProjOb
             if (!Dictionaries.objectDictionary.TryGetValue(Arguments, out IDictionary? dict))
             {
                 Console.WriteLine("Invalid argument");
-                Console.WriteLine(this);
                 return;
             }
 
@@ -56,91 +61,7 @@ namespace ProjOb
         public string Arguments { get; set; }
         public CommandFind() => Arguments = "";
 
-        private class Comparison
-        {
-            public Comparison(string requirement)
-            {
-                string[] parts = Regex.Split(requirement, @"([<=>])");
-                // what if set name has an equal sign
-                if (parts.Length != 3)
-                {
-                    throw new ArgumentException();
-                }
 
-                FieldName = parts[0];
-                FieldType = "";
-                Operator = parts[1];
-                ValueString = parts[2];
-                Value = null;
-                ValueParsed = false;
-            }
-
-            private string Operator { get; set; }
-            private string FieldName { get; set; }
-            private IComparable? Value { get; set; }
-            private string ValueString { get; set; }
-            private string FieldType { get; set; }
-            private bool ValueParsed;
-            private void ParseValue(IFilterable obj)
-            {
-                ValueParsed = true;
-
-                if (ValueString.StartsWith("\"") && ValueString.EndsWith("\""))
-                    ValueString = ValueString.Substring(1, ValueString.Length - 2);
-
-                FieldType = obj.GetFieldTypeByName(FieldName);
-
-                switch (FieldType)
-                {
-                case "int":
-                    if (int.TryParse(ValueString, out int intValue))
-                        Value = intValue;
-                    break;
-                case "double":
-                    if (double.TryParse(ValueString, out double doubleValue))
-                        Value = doubleValue;
-                    break;
-                case "bool":
-                    if (bool.TryParse(ValueString, out bool boolValue))
-                        Value = boolValue;
-                    break;
-                case "string":
-                case "enum":
-                    Value = ValueString;
-                    break;
-                default:
-                    throw new ArgumentException();
-                }
-
-                if (Value == null)
-                    throw new ArgumentException();
-            }
-
-            public bool Compare(IFilterable? left)
-            {
-                if (left == null)
-                    return false;
-
-                if (!ValueParsed)
-                    ParseValue(left);
-
-                if (Value == null)
-                    return false;
-
-                switch (Operator)
-                {
-                case "=":
-                    return left.GetFieldByName(FieldName).Equals(Value);
-                case "<":
-                    return left.GetFieldByName(FieldName).CompareTo(Value) < 0;
-                case ">":
-                    return left.GetFieldByName(FieldName).CompareTo(Value) > 0;
-                }
-                return false;
-
-                // throw...?
-            }
-        }
 
         public void Execute()
         {
@@ -150,7 +71,6 @@ namespace ProjOb
                 out IDictionary? iteratedObjects))
             {
                 Console.WriteLine("Invalid argument");
-                Console.WriteLine(this);
                 return;
             }
 
@@ -160,16 +80,24 @@ namespace ProjOb
                 return;
             }
 
-            // handle no requierements... & merge with list
+            // TODO
+            if (tokens.Length < 2)
+            {
+                var fct = new CommandFactory();
+                var cmd = fct.BuildCommand("list " + Arguments);
+                cmd.Execute();
+                return;
+            }
+
             var requirements = new Regex(@"\S+\s*[=><]\s*(?:"".*?""|'.*?'|\S+)")
                 .Matches(tokens[1]);
-            var predicates = new List<Comparison>();
+            var predicates = new List<Requirement>();
 
             foreach (Match requirement in requirements)
             {
                 try
                 {
-                    var comparer = new Comparison(requirement.Value);
+                    var comparer = new Requirement(requirement.Value);
                     predicates.Add(comparer);
                 }
                 catch (ArgumentException)
@@ -206,42 +134,129 @@ namespace ProjOb
                     Console.WriteLine(pair.Value);
             }
         }
-
     }
 
-    public class CommandAdd : ICommand
+    public class Requirement
+    {
+        public Requirement(string requirement)
+        {
+            string[] parts = Regex.Split(requirement, @"([<=>])");
+            // what if set name has an equal sign
+            if (parts.Length != 3)
+            {
+                throw new ArgumentException();
+            }
+
+            FieldName = parts[0];
+            FieldType = "";
+            Operator = parts[1];
+            ValueString = parts[2];
+            Value = null;
+            ValueParsed = false;
+        }
+
+        private string Operator { get; set; }
+        private string FieldName { get; set; }
+        private IComparable? Value { get; set; }
+        private string ValueString { get; set; }
+        private string FieldType { get; set; }
+        private bool ValueParsed;
+        private void ParseValue(IFilterable obj)
+        {
+            ValueParsed = true;
+
+            if (ValueString.StartsWith("\"") && ValueString.EndsWith("\""))
+                ValueString = ValueString.Substring(1, ValueString.Length - 2);
+
+            FieldType = obj.GetFieldTypeByName(FieldName);
+
+            switch (FieldType)
+            {
+            case "int":
+                if (int.TryParse(ValueString, out int intValue))
+                    Value = intValue;
+                break;
+            case "double":
+                if (double.TryParse(ValueString, out double doubleValue))
+                    Value = doubleValue;
+                break;
+            case "bool":
+                if (bool.TryParse(ValueString, out bool boolValue))
+                    Value = boolValue;
+                break;
+            case "string":
+            case "enum":
+                Value = ValueString;
+                break;
+            default:
+                throw new ArgumentException();
+            }
+
+            if (Value == null)
+                throw new ArgumentException();
+        }
+
+        public bool Compare(IFilterable? left)
+        {
+            if (left == null)
+                return false;
+
+            if (!ValueParsed)
+                ParseValue(left);
+
+            if (Value == null)
+                return false;
+
+            switch (Operator)
+            {
+            case "=":
+                return left.GetFieldByName(FieldName).Equals(Value);
+            case "<":
+                return left.GetFieldByName(FieldName).CompareTo(Value) < 0;
+            case ">":
+                return left.GetFieldByName(FieldName).CompareTo(Value) > 0;
+            }
+            return false;
+
+            // throw...?
+        }
+    }
+
+    public class CommandLogic
+    {
+
+        public static Dictionary<string, Dictionary<string, IBuilder>> BuilderDictionary
+            = new Dictionary<string, Dictionary<string, IBuilder>>
+            {
+                ["room"] = new Dictionary<string, IBuilder>
+                {
+                    ["base"] = new RoomBuilder(),
+                    ["secondary"] = new RoomPartialTxtBuilder()
+                },
+                ["course"] = new Dictionary<string, IBuilder>
+                {
+                    ["base"] = new CourseBuilder(),
+                    ["secondary"] = new CoursePartialTxtBuilder()
+                },
+                ["teacher"] = new Dictionary<string, IBuilder>
+                {
+                    ["base"] = new TeacherBuilder(),
+                    ["secondary"] = new TeacherPartialTxtBuilder()
+                },
+                ["student"] = new Dictionary<string, IBuilder>
+                {
+                    ["base"] = new StudentBuilder(),
+                    ["secondary"] = new StudentPartialTxtBuilder()
+                }
+            };
+    }
+
+
+    public class CommandAdd : CommandLogic, ICommand
     {
         public string Arguments { get; set; }
         public CommandAdd() => Arguments = "";
 
-        public Dictionary<string, Dictionary<string, IBuilder>> BuilderDictionary
-            = new Dictionary<string, Dictionary<string, IBuilder>>
-            {
-                { "room", new Dictionary<string, IBuilder>
-                {
-                    { "base", new RoomBuilder() },
-                    { "secondary", new RoomPartialTxtBuilder() }
-                }
-                },
-                { "course", new Dictionary<string, IBuilder>
-                {
-                    { "base", new CourseBuilder() },
-                    { "secondary", new CoursePartialTxtBuilder() }
-                }
-                },
-                { "teacher", new Dictionary<string, IBuilder>
-                {
-                    { "base", new TeacherBuilder() },
-                    { "secondary", new TeacherPartialTxtBuilder() }
-                }
-                },
-                { "student", new Dictionary<string, IBuilder>
-                {
-                    { "base", new StudentBuilder() },
-                    { "secondary", new StudentPartialTxtBuilder() }
-                }
-                },
-            };
         public void Execute()
         {
             string[] tokens = Arguments.Split(' ');
@@ -257,7 +272,7 @@ namespace ProjOb
             {
                 builder = BuilderDictionary[tokens[0]][representation];
             }
-            catch (KeyNotFoundException e) 
+            catch (KeyNotFoundException)
             {
                 Console.WriteLine("Invalid argument");
                 return;
@@ -271,19 +286,21 @@ namespace ProjOb
             Console.WriteLine("Type DONE to confirm creation or EXIT to abandon.");
             while (true)
             {
-                Console.Write(CLI.Prompt);
+                Console.Write("~ ");
                 input = Console.ReadLine();
 
                 if (input == null || input.Length == 0)
                     continue;
 
-                if (input == "DONE" || input == "EXIT")
+                if (input == "DONE")
                 {
                     builder.Build();
-                    if (input == "DONE")
-                        Console.WriteLine("Object created.");
-                    else
-                        Console.WriteLine("Object creation abandoned.");
+                    Console.WriteLine("Object created.");
+                    break;
+                }
+                else if (input == "EXIT")
+                {
+                    Console.WriteLine("Object creation abandoned.");
                     break;
                 }
 
@@ -307,4 +324,157 @@ namespace ProjOb
             }
         }
     }
+
+    public class CommandEdit : CommandLogic, ICommand
+    {
+        public string Arguments { get; set; }
+        public CommandEdit() => Arguments = "";
+
+        private IFilterable? Find()
+        {
+            string[] tokens = Arguments.Split(' ', 2);
+
+            if (!Dictionaries.objectDictionary.TryGetValue(tokens[0],
+                out IDictionary? iteratedObjects))
+            {
+                Console.WriteLine("Invalid argument");
+                return null;
+            }
+
+            if (iteratedObjects == null || iteratedObjects.Count == 0)
+            {
+                Console.WriteLine("No objects found");
+                return null;
+            }
+
+            var requirements = new Regex(@"\S+\s*[=><]\s*(?:"".*?""|'.*?'|\S+)")
+               .Matches(tokens[1]);
+            var predicates = new List<Requirement>();
+
+            foreach (Match requirement in requirements)
+            {
+                try
+                {
+                    var comparer = new Requirement(requirement.Value);
+                    predicates.Add(comparer);
+                }
+                catch (ArgumentException)
+                {
+                    Console.WriteLine("Invalid argument");
+                    return null;
+                }
+            }
+
+            IFilterable? ret = null;
+
+            foreach (DictionaryEntry pair in iteratedObjects)
+            {
+                bool predicatesSatisfied = true;
+                foreach (var predicate in predicates)
+                {
+                    try
+                    {
+                        if (!predicate.Compare(pair.Value as IFilterable))
+                        {
+                            predicatesSatisfied = false;
+                            break;
+                        }
+                    }
+                    catch (Exception ex) when (
+                        ex is ArgumentException ||
+                        ex is KeyNotFoundException)
+                    {
+                        Console.WriteLine("Invalid argument");
+                        return null;
+                    }
+
+                }
+
+                if (predicatesSatisfied)
+                {
+                    if (ret == null)
+                    {
+                        ret = pair.Value as IFilterable;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Set requirements don't uniquely identify one object");
+                        return null;
+                    }
+                }
+            }
+
+            return ret;
+        }
+
+        public void Execute()
+        {
+            IFilterable? found = Find();
+            if (found == null)
+            {
+                Console.WriteLine("Error");
+                return;
+            }
+
+            string[] tokens = Arguments.Split(' ', 2);
+            string objectName = tokens[0];
+
+            IBuilder builder;
+            try
+            {
+                builder = BuilderDictionary[objectName][found.Representation];
+            }
+            catch (KeyNotFoundException)
+            {
+                Console.WriteLine("Invalid argument");
+                return;
+            }
+
+            string? input = "";
+            Console.WriteLine("Available fields: '" +
+                string.Join(", ", builder.fieldSetterPairs.Select(x => x.Key)) +
+                "'");
+            Console.WriteLine("Type DONE to confirm creation or EXIT to abandon.");
+            while (true)
+            {
+                Console.Write("~ ");
+                input = Console.ReadLine();
+
+                if (input == null || input.Length == 0)
+                    continue;
+
+                if (input == "DONE")
+                {
+                    builder.Update(found);
+                    Console.WriteLine("Object editted.");
+                    break;
+                }
+                else if (input == "EXIT")
+                {
+                    Console.WriteLine("Object edition abandoned.");
+                    break;
+                }
+
+                string[] nameValue = input.Trim().Split("=");
+                if (nameValue.Length != 2)
+                {
+                    Console.WriteLine("Invalid argument");
+                    continue;
+                }
+
+                try
+                {
+                    builder.fieldSetterPairs[nameValue[0].Trim()](nameValue[1].Trim());
+                }
+                catch (Exception ex) when (
+                    ex is ArgumentException ||
+                    ex is KeyNotFoundException)
+                {
+                    Console.WriteLine("Invalid argument");
+                }
+            }
+
+        }
+    }
+
 }

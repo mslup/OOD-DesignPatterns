@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Data;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Xml.Linq;
@@ -6,39 +7,35 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ProjOb
 {
-    // issues:
-    // in each TryParse keep old value and assign if parse unsuccesful
-    // refactor marker interface
-    // refactor PartialTxtBuilders...
-
-    public abstract class IBuilder
+    public interface IBuilder 
     {
-        public abstract Dictionary<string, Action<string>>
-            fieldSetterPairs { get; }          
-        public abstract object Build(); // refactor 'object'
+        public Dictionary<string, Action<string>> fieldSetterPairs { get; }
+        public object Build(); // refactor 'object'
+        public object Update(object t); // as above
     }
 
     public class RoomBuilder : IBuilder
     {
         protected int Number;
         protected IRoom.RoomTypeEnum RoomType;
-        public override Dictionary<string, Action<string>> fieldSetterPairs 
-        { get; }           
+        public Dictionary<string, Action<string>> fieldSetterPairs
+        { get; }
+        public Dictionary<string, bool> updatedFields;
 
-        public RoomBuilder() 
+        public RoomBuilder()
         {
             Number = 0;
             RoomType = IRoom.RoomTypeEnum.other;
             fieldSetterPairs = new Dictionary<string, Action<string>>
             {
-                { "number", new Action<string>(SetNumber) },
-                { "type", new Action<string>(SetRoomType) },
+                { "number", SetNumber },
+                { "type", SetRoomType },
             };
-        }
-
-        override public object Build()
-        {
-            return new Room(Number, RoomType);
+            updatedFields = new Dictionary<string, bool>
+            {
+                { "number", false },
+                { "type", false}
+            };
         }
 
         public void SetNumber(string value)
@@ -48,6 +45,8 @@ namespace ProjOb
 
             if (!Number.SafeTryParse(value))
                 throw new ArgumentException();
+
+            updatedFields["number"] = true;
         }
 
         public void SetRoomType(string value)
@@ -58,12 +57,29 @@ namespace ProjOb
             // unwanted behaviour when value > 4
             if (!RoomType.SafeTryParse(value))
                 throw new ArgumentException();
+
+            updatedFields["type"] = true;
+        }
+
+        public object Build()
+        {
+            return new Room(Number, RoomType);
+        }
+
+        public object Update(object room)
+        { 
+            if (updatedFields["number"])
+                (room as IRoom).Number = Number;
+            if (updatedFields["type"])
+                (room as IRoom).RoomType = RoomType;
+
+            return room;
         }
     }
 
     public class RoomPartialTxtBuilder : RoomBuilder
     {
-        override public object Build()
+        public RoomPartialTxt Build() // to do
         {
             return new RoomPartialTxt(Number, RoomType.ToString(), "");
         }
@@ -74,8 +90,8 @@ namespace ProjOb
         protected string Name;
         protected string Code;
         protected int Duration;
-        public override Dictionary<string, Action<string>> fieldSetterPairs
-        { get; }
+        public Dictionary<string, Action<string>> fieldSetterPairs { get; }
+        public Dictionary<string, bool> updatedFields;
 
         public CourseBuilder()
         {
@@ -84,13 +100,19 @@ namespace ProjOb
             Duration = 0;
             fieldSetterPairs = new Dictionary<string, Action<string>>
             {
-                { "name", new Action<string>(SetName) },
-                { "code", new Action<string>(SetCode) },
-                { "duration", new Action<string>(SetDuration) }
+                { "name", SetName },
+                { "code", SetCode },
+                { "duration", SetDuration }
+            };
+            updatedFields = new Dictionary<string, bool>
+            {
+                { "name", false },
+                { "code", false},
+                { "duration", false }
             };
         }
 
-        override public object Build()
+        public object Build()
         {
             return new Course(Name, Code, Duration);
         }
@@ -111,7 +133,7 @@ namespace ProjOb
             Code = value;
         }
 
-        public void SetDuration (string value) 
+        public void SetDuration(string value)
         {
             if (value == null)
                 throw new ArgumentException();
@@ -119,11 +141,23 @@ namespace ProjOb
             if (!Duration.SafeTryParse(value))
                 throw new ArgumentException();
         }
+
+        public object Update(object course)
+        {
+            if (updatedFields["name"])
+                (course as ICourse).Name = Name;
+            if (updatedFields["code"])
+                (course as ICourse).Code = Code;
+            if (updatedFields["duration"])
+                (course as ICourse).Duration = Duration;
+
+            return course;
+        }
     }
 
     public class CoursePartialTxtBuilder : CourseBuilder
     {
-        override public object Build()
+        public CoursePartialTxt Build()
         {
             return new CoursePartialTxt(Name, Code, Duration, "");
         }
@@ -135,8 +169,9 @@ namespace ProjOb
         protected string Surname;
         protected string Code;
         protected ITeacher.TeacherRankEnum TeacherRank;
-        public override Dictionary<string, Action<string>> fieldSetterPairs
-        { get; }
+        public Dictionary<string, Action<string>> fieldSetterPairs { get; }
+        public Dictionary<string, bool> updatedFields;
+
         public TeacherBuilder()
         {
             Names = new string[] { "" };
@@ -145,16 +180,37 @@ namespace ProjOb
             TeacherRank = ITeacher.TeacherRankEnum.KiB;
             fieldSetterPairs = new Dictionary<string, Action<string>>
             {
-                { "names", new Action<string>(SetNames) },
-                { "surname", new Action<string>(SetSurname) },
-                { "code", new Action<string>(SetCode) },
-                { "rank", new Action<string>(SetTeacherRank) }
+                { "names", SetNames },
+                { "surname", SetSurname },
+                { "code", SetCode },
+                { "rank", SetTeacherRank }
+            };
+            updatedFields = new Dictionary<string, bool>
+            {
+                { "names", false },
+                { "surname", false },
+                { "code", false },
+                { "rank", false }
             };
         }
 
-        override public object Build()
+        public object Build()
         {
             return new Teacher(Names, Surname, TeacherRank, Code);
+        }
+
+        public object Update(object teacher)
+        {
+            if (updatedFields["names"])
+                (teacher as ITeacher).Names = Names.ToList();
+            if (updatedFields["surname"])
+                (teacher as ITeacher).Surname = Surname;
+            if (updatedFields["code"])
+                (teacher as ITeacher).Code = Code;
+            if (updatedFields["rank"])
+                (teacher as ITeacher).TeacherRank = TeacherRank;
+
+            return teacher;
         }
 
         public void SetNames(string value)
@@ -196,7 +252,7 @@ namespace ProjOb
 
     public class TeacherPartialTxtBuilder : TeacherBuilder
     {
-        public override object Build()
+        public TeacherPartialTxt Build()
         {
             return new TeacherPartialTxt(Surname + "," + string.Join(",", Names),
                 TeacherRank.ToString(), Code, "");
@@ -209,8 +265,9 @@ namespace ProjOb
         protected string Surname;
         protected int Semester;
         protected string Code;
-        public override Dictionary<string, Action<string>> fieldSetterPairs
+        public Dictionary<string, Action<string>> fieldSetterPairs
         { get; }
+        public Dictionary<string, bool> updatedFields;
         public StudentBuilder()
         {
             Names = new string[] { "" };
@@ -219,16 +276,37 @@ namespace ProjOb
             Semester = 0;
             fieldSetterPairs = new Dictionary<string, Action<string>>
             {
-                { "names", new Action<string>(SetNames) },
-                { "surname", new Action<string>(SetSurname) },
-                { "code", new Action<string>(SetCode) },
-                { "semester", new Action<string>(SetSemester) }
+                { "names", SetNames },
+                { "surname", SetSurname },
+                { "code", SetCode },
+                { "semester", SetSemester }
+            };
+            updatedFields = new Dictionary<string, bool>
+            {
+                { "names", false },
+                { "surname", false },
+                { "code", false },
+                { "semester", false }
             };
         }
 
-        override public object Build()
+        public object Build()
         {
             return new Student(Names, Surname, Semester, Code);
+        }
+
+        public object Update(object student)
+        {
+            if (updatedFields["names"])
+                (student as IStudent).Names = Names.ToList();
+            if (updatedFields["surname"])
+                (student as IStudent).Surname = Surname;
+            if (updatedFields["code"])
+                (student as IStudent).Code = Code;
+            if (updatedFields["semester"])
+                (student as IStudent).Semester = Semester;
+
+            return student;
         }
 
         public void SetNames(string value)
@@ -269,7 +347,7 @@ namespace ProjOb
 
     public class StudentPartialTxtBuilder : StudentBuilder
     {
-        override public object Build()
+        public StudentPartialTxt Build()
         {
             return new StudentPartialTxt(Surname + "," + string.Join(",", Names),
                 Semester, Code, "");
@@ -278,7 +356,7 @@ namespace ProjOb
 
     public static class EnumExtension
     {
-        public static bool SafeTryParse<TEnum>(this ref TEnum Field, 
+        public static bool SafeTryParse<TEnum>(this ref TEnum Field,
             string value) where TEnum : struct
         {
             TEnum oldValue = Field;
