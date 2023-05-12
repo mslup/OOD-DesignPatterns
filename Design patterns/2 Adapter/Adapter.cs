@@ -77,6 +77,7 @@ namespace ProjOb
         {
             this.adaptee = adaptee;
             InitDictionary();
+            Dictionaries.Add(this);
         }
 
         public int Number
@@ -132,6 +133,7 @@ namespace ProjOb
         {
             this.adaptee = adaptee;
             InitDictionary();
+            Dictionaries.Add(this);
         }
 
         public string Name
@@ -223,6 +225,7 @@ namespace ProjOb
         {
             this.adaptee = adaptee;
             InitDictionary();
+            Dictionaries.Add(this);
         }
 
         public List<string> Names
@@ -323,6 +326,7 @@ namespace ProjOb
         {
             this.adaptee = adaptee;
             InitDictionary();
+            Dictionaries.Add(this);
         }
 
         public List<string> Names

@@ -53,7 +53,6 @@
             Number = number;
             RoomType = type.ToString();
             Courses = courses;
-            Dictionaries.Add(new RoomPartialTxtAdapter(this));
         }
     }
 
@@ -72,7 +71,6 @@
             Code = code;
             Duration = duration;
             People = people;
-            Dictionaries.Add(new CoursePartialTxtAdapter(this));
         }
     }
 
@@ -90,7 +88,6 @@
             Rank = rank;
             Code = code;
             Courses = courses;
-            Dictionaries.Add(new TeacherPartialTxtAdapter(this));
         }
     }
 
@@ -108,7 +105,6 @@
             Semester = semester;
             Code = code;
             Courses = courses;
-            Dictionaries.Add(new StudentPartialTxtAdapter(this));
         }
     }
 }
