@@ -24,7 +24,6 @@ namespace ProjOb
 
         public static void Project2_Test()
         {
-            Console.OutputEncoding = Encoding.UTF8;
             ByTEPartialTxt Uni = ConstructByTEPartialTxt();
             var Adapter = new ByTEPartialTxtAdapter(Uni);
             Console.WriteLine(Adapter);

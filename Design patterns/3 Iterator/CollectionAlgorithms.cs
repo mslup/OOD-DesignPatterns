@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ProjOb
 {
-    static class IteratorTest
+    static class CollectionAlgorithms
     {
         public static void Print<T>(INewCollection<T> collection)
         {

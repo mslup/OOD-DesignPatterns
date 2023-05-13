@@ -1,4 +1,6 @@
-﻿namespace ProjOb
+﻿using System.Text;
+
+namespace ProjOb
 {
     public class CommandFactory
     {
@@ -37,14 +39,21 @@
         public static void RunApp()
         {
             ByTE.ConstructByTE();
-            Console.WriteLine("Application ByTE");
+
+            Console.OutputEncoding = Encoding.UTF8;
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("= = = Application ByTE = = =\n");
+            Console.ResetColor();
 
             var queue = new CommandQueue();
             var factory = new CommandFactory();
 
             while (true)
             {
+                Console.ForegroundColor = ConsoleColor.White;
                 Console.Write(Prompt);
+                Console.ResetColor();
+
                 string? arg = Console.ReadLine();
 
                 if (arg == null || arg.Length == 0)
