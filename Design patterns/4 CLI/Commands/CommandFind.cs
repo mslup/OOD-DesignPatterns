@@ -1,27 +1,31 @@
 ﻿using System;
 using System.Collections;
+using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
 namespace ProjOb
 {
-    public class CommandFind : CommandLogic, ICommand
+    [DataContract, KnownType(typeof(CommandFind))]
+    public class CommandFind : AbstractCommand, ICommand
     {
-        public string Arguments { get; set; }
+        [DataMember] public string Arguments { get; set; }
+        [DataMember] private List<Predicate>? predicates;
+        [DataMember] private bool EmptyRequirements;
+        [DataMember] private string objectType;
+        private IDictionary? iteratedObjects;
+        private Vector<IFilterable>? foundObjectsCollection;
+
         public CommandFind()
         {
             Arguments = "";
+            objectType = "";
             EmptyRequirements = true;
         }
-
-        private Vector<IFilterable>? foundObjectsCollection;
-        private IDictionary? iteratedObjects;
-        private List<Predicate>? predicates;
-        private bool EmptyRequirements;
 
         public bool Preprocess()
         {
             string[] tokens = Arguments.Split(' ', 2);
-            string objectType = tokens[0];
+            objectType = tokens[0];
 
             if (!FindCollection(objectType, out iteratedObjects))
                 return false;
@@ -42,7 +46,7 @@ namespace ProjOb
         public void Execute()
         {
             if (iteratedObjects == null)
-                return;
+                FindCollection(objectType, out iteratedObjects);
 
             if (EmptyRequirements)
             {

@@ -11,7 +11,7 @@ namespace ProjOb
         public static void Main() 
         {
             CLI.RunApp();
-            //MinExample.Run();
+            //MinExample.MinExample.Run();
         }
     }
 }

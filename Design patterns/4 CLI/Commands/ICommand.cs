@@ -1,7 +1,8 @@
-﻿using System.Text.RegularExpressions;
-using System.Collections;
-using System;
+﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
+using System.Xml.Serialization;
 
 namespace ProjOb
 {
@@ -12,18 +13,20 @@ namespace ProjOb
         public void Execute();
         public string ToString();
     }
-    public class CommandLogic
-    { 
 
+    [DataContract]
+    public abstract class AbstractCommand
+    {
         protected static Dictionary<string, Func<IBuilder>> BuilderDictionary
-                = new Dictionary<string, Func<IBuilder>>
-                {
-                    ["room"] = () => new RoomBuilder(),
-                    ["course"] = () => new CourseBuilder(),
-                    ["teacher"] = () => new TeacherBuilder(),
-                    ["student"] = () => new StudentBuilder()
-                };
+            = new()
+            {
+                ["room"] = () => new RoomBuilder(),
+                ["course"] = () => new CourseBuilder(),
+                ["teacher"] = () => new TeacherBuilder(),
+                ["student"] = () => new StudentBuilder()
+            };
 
+        [DataContract, KnownType(typeof(Predicate))]
         protected class Predicate
         {
             private static Dictionary<string, Func<string, string>> typeDictionary
@@ -39,26 +42,38 @@ namespace ProjOb
                 ["students"] = Student.GetFieldTypeByName
             };
 
+            [DataMember] private string Operator { get; set; }
+            [DataMember] private string FieldName { get; set; }
+            [DataMember] private IComparable? Value { get; set; }
+            private string FieldType { get; set; }
+            private string ValueString { get; set; }
+
             public Predicate(string objectType, string requirement)
             {
                 string[] parts = Regex.Split(requirement, @"([<=>])");
                 if (parts.Length != 3)
                 {
-                    throw new ArgumentException();
+                    throw new ArgumentException($"Unable to parse requirement: '{requirement}'");
                 }
 
                 FieldName = parts[0];
-                FieldType = typeDictionary[objectType](FieldName);
+                if (!typeDictionary.TryGetValue(objectType, out Func<string, string>? getter))
+                {
+                    throw new KeyNotFoundException($"Unrecognized class name: '{objectType}'");
+                }
+
+                try
+                {
+                    FieldType = getter(FieldName);
+                }
+                catch (KeyNotFoundException)
+                {
+                    throw new KeyNotFoundException($"Unrecognized field name: '{FieldName}'");
+                }
                 Operator = parts[1];
                 ValueString = parts[2];
                 ParseValue();
             }
-
-            private string Operator { get; set; }
-            private string FieldName { get; set; }
-            private IComparable? Value { get; set; }
-            private string ValueString { get; set; }
-            private string FieldType { get; set; }
             private void ParseValue()
             {
                 ValueString = ValueString.TrimWQ();
@@ -82,13 +97,12 @@ namespace ProjOb
                     Value = ValueString;
                     break;
                 default:
-                    throw new ArgumentException();
+                    throw new ArgumentException($"Unable to parse '{ValueString}'");
                 }
 
                 if (Value == null)
-                    throw new ArgumentException();
+                    throw new ArgumentException($"Unable to parse '{ValueString}'");
             }
-
             public bool Compare(IFilterable? obj)
             {
                 if (obj == null)
@@ -112,17 +126,28 @@ namespace ProjOb
             }
         }
 
+        protected bool FindCollection(string arg)
+        {
+            if (!Dictionaries.objectDictionary.ContainsKey(arg))
+            {
+                Console.WriteLine($"Unrecognized object type: '{arg}'");
+                return false;
+            }
+
+            return true;
+        }
+
         protected bool FindCollection(string arg, [NotNullWhen(true)] out IDictionary? collection)
         {
             if (!Dictionaries.objectDictionary.TryGetValue(arg, out collection))
             {
-                Console.WriteLine("Invalid argument");
+                Console.WriteLine($"Unrecognized object type: '{arg}'");
                 return false;
             }
 
             if (collection == null)
             {
-                Console.WriteLine("....message to do");
+                Console.WriteLine("Collection retrieval failed");
                 return false;
             }
 
@@ -160,6 +185,17 @@ namespace ProjOb
             CollectionAlgorithms.Print(collection);
         }
 
+        protected bool CheckRepresentation(string rep)
+        {
+            if (!Dictionaries.Representations.Contains(rep))
+            {
+                Console.WriteLine($"Unrecognized representation: {rep}." +
+                    $"Available represenations: {string.Join(", ", Dictionaries.Representations)}");
+                return false;
+            }
+            return true;
+        }
+
         private static Regex RequirementRegex =
             new Regex(@"\S+\s*[=><]\s*(?:"".*?""|'.*?'|\S+)", RegexOptions.Compiled);
 
@@ -175,9 +211,11 @@ namespace ProjOb
                 {
                     predicates.Add(new Predicate(type, match.Value));
                 }
-                catch (ArgumentException)
+                catch (Exception ex) when (
+                    ex is ArgumentException ||
+                    ex is KeyNotFoundException)
                 {
-                    Console.WriteLine("Invalid argument");
+                    Console.WriteLine(ex.Message);
                     return false;
                 }
             }
@@ -186,9 +224,18 @@ namespace ProjOb
         }
 
         // maybe return bool and vector as out parameter
-        protected Vector<IFilterable>? RunPredicates(IDictionary iteratedObjects,
-            List<Predicate> predicates, bool CheckIfUnique = false)
+        protected Vector<IFilterable>? RunPredicates(IDictionary? iteratedObjects,
+            List<Predicate>? predicates, bool CheckIfUnique = false)
         {
+            if (iteratedObjects == null || predicates == null)
+                return null;
+
+            if (CheckIfUnique && iteratedObjects.Count > 1 && predicates.Count == 0)
+            {
+                Console.WriteLine("Provide requirements to uniquely identify an object");
+                return null;
+            }
+
             Vector<IFilterable>? result = new();
 
             foreach (DictionaryEntry pair in iteratedObjects)
@@ -270,7 +317,10 @@ namespace ProjOb
             string? input;
             while (true)
             {
-                Console.Write("   * ");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("* ");
+                Console.ResetColor();
+
                 input = Console.ReadLine();
 
                 if (input == null || input.Length == 0)

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using static ProjOb.IRoom;
 using static ProjOb.ITeacher;
@@ -69,6 +70,7 @@ namespace ProjOb
         }
     }
 
+    [DataContract, KnownType(typeof(RoomPartialTxtAdapter))]
     public partial class RoomPartialTxtAdapter : IRoom
     {
         private RoomPartialTxt adaptee;
@@ -93,12 +95,12 @@ namespace ProjOb
 
         public string Representation { get => adaptee.Representation; }
 
+        private static Regex courseRegex = new Regex(@"(?:\(([\w\d]+)\),?)+", RegexOptions.Compiled);
         public List<ICourse> Courses
         {
             get
             {
-                var regex = new Regex(@"(?:\(([\w\d]+)\),?)+");
-                GroupCollection groups = regex.Match(adaptee.Courses).Groups;
+                GroupCollection groups = courseRegex.Match(adaptee.Courses).Groups;
 
                 var ret = new List<ICourse>();
 
@@ -114,8 +116,7 @@ namespace ProjOb
             var str = "";
             str += $"{Number}, {RoomType}, ";
 
-            var regex = new Regex(@"(?:\(([\w\d]+)\),?)+");
-            GroupCollection groups = regex.Match(adaptee.Courses).Groups;
+            GroupCollection groups = courseRegex.Match(adaptee.Courses).Groups;
 
             str += "[";
             str += string.Join(", ", groups[1].Captures);
@@ -124,7 +125,7 @@ namespace ProjOb
             return str;
         }
     }
-
+    [DataContract, KnownType(typeof(CoursePartialTxtAdapter))]
     public partial class CoursePartialTxtAdapter : ICourse
     {
         private CoursePartialTxt adaptee;
@@ -158,16 +159,18 @@ namespace ProjOb
             get => adaptee.Representation;
         }
 
+        private static Regex separatePeopleRegex =
+            new Regex(@"(?<teachers>.*)\$(?<students>.*)", RegexOptions.Compiled);
+        private static Regex splitByCommasRegex =
+            new Regex(@"(?:([\w\d]+),?)+", RegexOptions.Compiled);
         public List<ITeacher> Teachers
         {
             get
             {
-                var sepRegex = new Regex(@"(?<teachers>.*)\$(?<students>.*)");
-                GroupCollection groups = sepRegex.Match(adaptee.People).Groups;
+                GroupCollection groups = separatePeopleRegex.Match(adaptee.People).Groups;
 
-                var interRegex = new Regex(@"(?:([\w\d]+),?)+");
                 GroupCollection interGroups =
-                    interRegex.Match(groups["teachers"].Value).Groups;
+                    splitByCommasRegex.Match(groups["teachers"].Value).Groups;
 
                 var ret = new List<ITeacher>();
 
@@ -216,7 +219,7 @@ namespace ProjOb
             return str;
         }
     }
-
+    [DataContract, KnownType(typeof(TeacherPartialTxtAdapter))]
     public partial class TeacherPartialTxtAdapter : ITeacher
     {
         private TeacherPartialTxt adaptee;
@@ -317,7 +320,7 @@ namespace ProjOb
             return str;
         }
     }
-
+    [DataContract, KnownType(typeof(StudentPartialTxtAdapter))]
     public partial class StudentPartialTxtAdapter : IStudent
     {
         private readonly StudentPartialTxt adaptee;

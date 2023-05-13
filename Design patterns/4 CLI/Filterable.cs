@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace ProjOb
 {
@@ -18,17 +12,16 @@ namespace ProjOb
     public partial class Room
     {
         private Dictionary<string, IComparable> nameFieldPairs;
-        private static Dictionary<string, string> nameTypePairs
-            = new Dictionary<string, string>
-            {
-                { "number", "int" },
-                { "type", "enum" }
-            };
+        private static Dictionary<string, string> nameTypePairs = new()
+        {
+            { "number", "int" },
+            { "type", "enum" }
+        };
 
         [MemberNotNull(nameof(nameFieldPairs))]
         public void InitDictionary()
         {
-            nameFieldPairs = new Dictionary<string, IComparable>
+            nameFieldPairs = new()
             {
                 { "number", Number },
                 { "type", RoomType.ToString() }
@@ -49,17 +42,16 @@ namespace ProjOb
     public partial class RoomPartialTxtAdapter
     {
         private Dictionary<string, IComparable> nameFieldPairs;
-        private static Dictionary<string, string> nameTypePairs
-            = new Dictionary<string, string>
-            {
-                { "number", "int" },
-                { "type", "enum" }
-            };
+        private static Dictionary<string, string> nameTypePairs = new()
+        {
+            { "number", "int" },
+            { "type", "enum" }
+        };
 
         [MemberNotNull(nameof(nameFieldPairs))]
         public void InitDictionary()
         {
-            nameFieldPairs = new Dictionary<string, IComparable>
+            nameFieldPairs = new()
             {
                 { "number", Number },
                 { "type", RoomType.ToString() }
@@ -80,18 +72,17 @@ namespace ProjOb
     public partial class Course
     {
         private Dictionary<string, IComparable> nameFieldPairs;
-        private static Dictionary<string, string> nameTypePairs
-            = new Dictionary<string, string>
-            {
-                { "name", "string" },
-                { "code", "string" },
-                { "duration", "int" }
-            };
+        private static Dictionary<string, string> nameTypePairs = new()
+        {
+            { "name", "string" },
+            { "code", "string" },
+            { "duration", "int" }
+        };
 
         [MemberNotNull(nameof(nameFieldPairs))]
         public void InitDictionary()
         {
-            nameFieldPairs = new Dictionary<string, IComparable>
+            nameFieldPairs = new()
             {
                 { "number", Name },
                 { "code", Code },
@@ -113,18 +104,17 @@ namespace ProjOb
     public partial class CoursePartialTxtAdapter
     {
         private Dictionary<string, IComparable> nameFieldPairs;
-        private static Dictionary<string, string> nameTypePairs
-            = new Dictionary<string, string>
-            {
-                { "name", "string" },
-                { "code", "string" },
-                { "duration", "int" }
-            };
+        private static Dictionary<string, string> nameTypePairs = new()
+        {
+            { "name", "string" },
+            { "code", "string" },
+            { "duration", "int" }
+        };
 
         [MemberNotNull(nameof(nameFieldPairs))]
         public void InitDictionary()
         {
-            nameFieldPairs = new Dictionary<string, IComparable>
+            nameFieldPairs = new()
             {
                 { "number", Name },
                 { "code", Code },
@@ -146,20 +136,19 @@ namespace ProjOb
     public partial class Teacher
     {
         private Dictionary<string, IComparable> nameFieldPairs;
-        private static Dictionary<string, string> nameTypePairs
-            = new Dictionary<string, string>
-            {
-                { "names", "string" },
-                { "name", "string" },
-                { "surname", "string" },
-                { "rank", "enum" },
-                { "code", "string" },
-            };
+        private static Dictionary<string, string> nameTypePairs = new()
+        {
+            { "names", "string" },
+            { "name", "string" },
+            { "surname", "string" },
+            { "rank", "enum" },
+            { "code", "string" },
+        };
 
         [MemberNotNull(nameof(nameFieldPairs))]
         public void InitDictionary()
         {
-            nameFieldPairs = new Dictionary<string, IComparable>
+            nameFieldPairs = new()
             {
                 { "names", string.Join(" ", Names) },
                 { "name", string.Join(" ", Names) },
@@ -183,20 +172,19 @@ namespace ProjOb
     public partial class TeacherPartialTxtAdapter
     {
         private Dictionary<string, IComparable> nameFieldPairs;
-        private static Dictionary<string, string> nameTypePairs
-            = new Dictionary<string, string>
-            {
-                { "names", "string" },
-                { "name", "string" },
-                { "surname", "string" },
-                { "rank", "enum" },
-                { "code", "string" },
-            };
+        private static Dictionary<string, string> nameTypePairs = new()
+        {
+            { "names", "string" },
+            { "name", "string" },
+            { "surname", "string" },
+            { "rank", "enum" },
+            { "code", "string" },
+        };
 
         [MemberNotNull(nameof(nameFieldPairs))]
         public void InitDictionary()
         {
-            nameFieldPairs = new Dictionary<string, IComparable>
+            nameFieldPairs = new()
             {
                 { "names", string.Join(" ", Names) },
                 { "name", string.Join(" ", Names) },
@@ -220,20 +208,19 @@ namespace ProjOb
     public partial class Student
     {
         private Dictionary<string, IComparable> nameFieldPairs;
-        private static Dictionary<string, string> nameTypePairs
-            = new Dictionary<string, string>
-            {
-                { "names", "string" },
-                { "name", "string" },
-                { "surname", "string" },
-                { "semester", "int" },
-                { "code", "string" },
-            };
+        private static Dictionary<string, string> nameTypePairs= new()
+        {
+            { "names", "string" },
+            { "name", "string" },
+            { "surname", "string" },
+            { "semester", "int" },
+            { "code", "string" },
+        };
 
         [MemberNotNull(nameof(nameFieldPairs))]
         public void InitDictionary()
         {
-            nameFieldPairs = new Dictionary<string, IComparable>
+            nameFieldPairs = new()
             {
                 { "names", string.Join(" ", Names) },
                 { "name", string.Join(" ", Names) },
@@ -257,19 +244,18 @@ namespace ProjOb
     public partial class StudentPartialTxtAdapter
     {
         private Dictionary<string, IComparable> nameFieldPairs;
-        private static Dictionary<string, string> nameTypePairs
-            = new Dictionary<string, string>
-            {
-                { "names", "string" },
-                { "surname", "string" },
-                { "semester", "int" },
-                { "code", "string" },
-            };
+        private static Dictionary<string, string> nameTypePairs = new()
+        {
+            { "names", "string" },
+            { "surname", "string" },
+            { "semester", "int" },
+            { "code", "string" },
+        };
 
         [MemberNotNull(nameof(nameFieldPairs))]
         public void InitDictionary()
         {
-            nameFieldPairs = new Dictionary<string, IComparable>
+            nameFieldPairs = new()
             {
                 { "names", string.Join(" ", Names) },
                 { "surname", Surname },

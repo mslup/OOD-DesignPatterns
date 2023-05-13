@@ -14,7 +14,7 @@ namespace ProjOb
         };
 
         public ICommand? BuildCommand(string arg)
-        { 
+        {
             arg = arg.Trim();
             string[] tokens = arg.Split(' ', 2);
 
@@ -29,6 +29,7 @@ namespace ProjOb
                 return command;
             }
 
+            Console.WriteLine($"Unrecognized command: '{arg.Trim().Split(' ')[0]}'");
             return null;
         }
     }
@@ -42,7 +43,7 @@ namespace ProjOb
 
             Console.OutputEncoding = Encoding.UTF8;
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("= = = Application ByTE = = =\n");
+            Console.WriteLine("=== Application ByTE ===\n");
             Console.ResetColor();
 
             var queue = new CommandQueue();
@@ -59,10 +60,8 @@ namespace ProjOb
                 if (arg == null || arg.Length == 0)
                     continue;
 
-                if (arg.ToLower() == "exit")
+                if (arg.ToLower().Trim() == "exit")
                     break;
-                
-                var command = factory.BuildCommand(arg);
 
                 if (arg.StartsWith("queue"))
                 {
@@ -70,13 +69,14 @@ namespace ProjOb
                     continue;
                 }
 
-                if (command != null)
-                {
-                    if (command.Preprocess())
-                        queue.Push(command);
-                }
-                else
-                    Console.WriteLine($"Unrecognized command: {arg.Trim().Split(' ')[0]}");
+                var command = factory.BuildCommand(arg);
+
+                if (command == null)
+                    continue;
+
+                if (command.Preprocess())
+                    queue.Push(command);
+
             }
         }
     }

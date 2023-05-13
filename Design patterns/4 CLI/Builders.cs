@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Xml.Linq;
@@ -10,17 +11,18 @@ namespace ProjOb
     public interface IBuilder
     {
         public Dictionary<string, Action<string>> Setters { get; }
-        public Dictionary<string, Func<object>> BuildMethods { get; }
+        public abstract Dictionary<string, Func<object>> BuildMethods { get; }
         public object Update(object t);
     }
 
+    [DataContract, KnownType(typeof(RoomBuilder))]
     public class RoomBuilder : IBuilder
     {
-        protected int Number;
-        protected IRoom.RoomTypeEnum RoomType;
+        [DataMember] private int Number;
+        [DataMember] private IRoom.RoomTypeEnum RoomType;
+        [DataMember] private Dictionary<string, bool> updatedFields;
         public Dictionary<string, Action<string>> Setters { get; }
         public Dictionary<string, Func<object>> BuildMethods { get; }
-        private Dictionary<string, bool> updatedFields;
 
         public RoomBuilder()
         {
@@ -87,16 +89,16 @@ namespace ProjOb
         }
     }
 
-
+    [DataContract, KnownType(typeof(CourseBuilder))]
     public class CourseBuilder : IBuilder
     {
-        protected string Name;
-        protected string Code;
-        protected int Duration;
+        [DataMember] private string Name;
+        [DataMember] private string Code;
+        [DataMember] private int Duration;
+        [DataMember] private Dictionary<string, bool> updatedFields;
         public Dictionary<string, Action<string>> Setters { get; }
         public Dictionary<string, Func<object>> BuildMethods { get; }
 
-        private Dictionary<string, bool> updatedFields;
 
         public CourseBuilder()
         {
@@ -176,16 +178,17 @@ namespace ProjOb
         }
     }
 
+    [DataContract, KnownType(typeof(TeacherBuilder))]
     public class TeacherBuilder : IBuilder
     {
-        protected string[] Names;
-        protected string Surname;
-        protected string Code;
-        protected ITeacher.TeacherRankEnum TeacherRank;
+        [DataMember] private string[] Names;
+        [DataMember] private string Surname;
+        [DataMember] private string Code;
+        [DataMember] private ITeacher.TeacherRankEnum TeacherRank;
+        [DataMember] private Dictionary<string, bool> updatedFields;
         public Dictionary<string, Action<string>> Setters { get; }
         public Dictionary<string, Func<object>> BuildMethods { get; }
 
-        private Dictionary<string, bool> updatedFields;
 
         public TeacherBuilder()
         {
@@ -238,7 +241,6 @@ namespace ProjOb
 
             return teacher;
         }
-
         public void SetNames(string value)
         {
             if (value == null)
@@ -284,18 +286,18 @@ namespace ProjOb
         }
     }
 
-
+    [DataContract, KnownType(typeof(StudentBuilder))]
     public class StudentBuilder : IBuilder
     {
-        protected string[] Names;
-        protected string Surname;
-        protected int Semester;
-        protected string Code;
+        [DataMember] private string[] Names;
+        [DataMember] private string Surname;
+        [DataMember] private int Semester;
+        [DataMember] private string Code;
+        [DataMember] private Dictionary<string, bool> updatedFields;
         public Dictionary<string, Action<string>> Setters
         { get; }
         public Dictionary<string, Func<object>> BuildMethods { get; }
 
-        private Dictionary<string, bool> updatedFields;
         public StudentBuilder()
         {
             Names = new string[] { "" };
@@ -391,40 +393,4 @@ namespace ProjOb
             updatedFields["semester"] = true;
         }
     }
-
-    public class StudentPartialTxtBuilder : StudentBuilder
-    {
-
-    }
-
-    public static class EnumExtension
-    {
-        public static bool SafeTryParse<TEnum>(this ref TEnum Field,
-            string value) where TEnum : struct
-        {
-            TEnum oldValue = Field;
-            if (!Enum.TryParse(value, out Field))
-            {
-                Field = oldValue;
-                return false;
-            }
-            return true;
-        }
-    }
-
-    public static class IntExtension
-    {
-        public static bool SafeTryParse(this ref int Field,
-            string value)
-        {
-            int oldValue = Field;
-            if (!int.TryParse(value, out Field))
-            {
-                Field = oldValue;
-                return false;
-            }
-            return true;
-        }
-    }
-
 }

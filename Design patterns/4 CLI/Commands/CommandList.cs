@@ -1,14 +1,16 @@
 ﻿using System.Collections;
+using System.Runtime.Serialization;
 
 namespace ProjOb
 {
-    public class CommandList : CommandLogic, ICommand
+    [DataContract, KnownType(typeof(CommandList))]
+    public class CommandList : AbstractCommand, ICommand
     {
-        public string Arguments { get; set; }
+        [DataMember] public string Arguments { get; set; }
+        private IDictionary? objectsToList;
 
         public CommandList() => Arguments = "";
 
-        private IDictionary? objectsToList;
 
         public bool Preprocess()
         {
@@ -17,6 +19,9 @@ namespace ProjOb
 
         public void Execute()
         {
+            if (objectsToList == null) 
+                FindCollection(Arguments, out objectsToList);
+
             PrintCollection(objectsToList);
         }
 

@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.Serialization;
 using System.Security.Cryptography.X509Certificates;
 using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -91,6 +92,7 @@ namespace ProjOb
         }
     }
 
+    [DataContract, KnownType(typeof(Room))]
     public partial class Room : IRoom
     {
         public int Number { get; set; }
@@ -121,6 +123,7 @@ namespace ProjOb
                 $"[{string.Join(", ", Courses.Select(course => course.Code))}]";
         }
     }
+    [DataContract, KnownType(typeof(Course))]
     public partial class Course : ICourse
     {
         public string Name { get; set; }
@@ -166,6 +169,7 @@ namespace ProjOb
         }
 
     }
+    [DataContract, KnownType(typeof(Teacher))]
     public partial class Teacher : ITeacher
     {
         public List<string> Names { get; set; }
@@ -210,6 +214,7 @@ namespace ProjOb
         }
 
     }
+    [DataContract, KnownType(typeof(Student))]
     public partial class Student : IStudent
     {
         public List<string> Names { get; set; }
@@ -253,6 +258,4 @@ namespace ProjOb
                 $"[{string.Join(", ", Courses.Select(course => course.Code))}]";
         }
     }
-
-
 }

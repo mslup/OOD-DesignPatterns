@@ -1,39 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using ProjOb;
 
 namespace ProjOb
 {
-    public class CommandAdd : CommandLogic, ICommand
+    [DataContract, KnownType(typeof(CommandAdd))]
+    public class CommandAdd : AbstractCommand, ICommand
     {
-        public string Arguments { get; set; }
-        private string Representation;
+        [DataMember] public string Arguments { get; set; }
+        [DataMember] private string Representation;
+        [DataMember] private IBuilder? builder;
+
         public CommandAdd()
         {
             Arguments = "";
             Representation = "";
         }
 
-        private IBuilder? builder;
         public bool Preprocess()
         {
             string[] tokens = Arguments.Split(' ');
             if (tokens.Length > 2)
             {
-                Console.WriteLine("Invalid arguments");
+                Console.WriteLine($"Unrecognized argument: '{tokens[2]}'." +
+                    "Usage: add {class_name} [base|secondary]");
                 return false;
             }
 
             Representation = tokens.Length == 2 ? tokens[1] : "base";
-            if (!Dictionaries.Representations.Contains(Representation))
-            {
-                Console.WriteLine($"Unrecognized representation: {Representation}." +
-                    $"Available represenations: {string.Join(", ", Dictionaries.Representations)}");
+
+            if (!CheckRepresentation(Representation))
                 return false;
-            }
 
             if (!GetBuilder(tokens[0], out builder))
                 return false;
