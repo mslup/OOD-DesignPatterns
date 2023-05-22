@@ -1,20 +1,23 @@
-﻿using System.Collections;
-using System.Runtime.InteropServices.ObjectiveC;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace ProjOb
 {
-    [DataContract, KnownType(typeof(CommandEdit)),
+    [DataContract, KnownType(typeof(CommandDelete)),
         KnownType(typeof(AbstractCommand))]
-    public class CommandEdit : AbstractCommand, ICommand
+    public class CommandDelete : AbstractCommand, ICommand
     {
         [DataMember] public string Arguments { get; set; }
         [DataMember] private string objectType;
-        [DataMember] private IBuilder? builder;
         [DataMember] private List<Predicate>? predicates;
-        private IFilterable? found;
         private IDictionary? iteratedObjects;
-        public CommandEdit()
+
+        public CommandDelete()
         {
             objectType = "";
             Arguments = "";
@@ -30,10 +33,7 @@ namespace ProjOb
                 objectType, out predicates))
                 return false;
 
-            if (!GetBuilder(tokens[0], out builder))
-                return false;
-
-            return FillBuilder(ref builder, BuilderType.Edit);
+            return true;
         }
 
         public bool PreprocessFromFile(StreamReader reader)
@@ -46,43 +46,32 @@ namespace ProjOb
                 objectType, out predicates, true))
                 return false;
 
-            if (!GetBuilder(tokens[0], out builder, true))
-                return false;
-
-            return FillBuilder(ref builder, BuilderType.Edit, true, reader);
+            return true;
         }
 
         public void Execute()
         {
-            if (builder == null)
-                return;
-
             if (!FindCollection(objectType, out iteratedObjects))
                 return;
 
-            var foundVector = RunPredicates(iteratedObjects, predicates, true);
+            string? foundKey = RunPredicatesGetKey
+                (iteratedObjects, predicates, true);
 
-            if (foundVector == null)
-                return;
-
-            if (foundVector.Count == 0)
-            {
+            if (foundKey == null)
+            { 
                 Console.WriteLine("No objects matching requirements found.");
                 return;
             }
 
-            found = foundVector[0];
-
-            Console.WriteLine("Found object:");
-            Console.WriteLine(found);
-            builder.Update(found);
-            Console.WriteLine("editted to:");
-            Console.WriteLine(found);
+            Console.WriteLine("Deleted object:");
+            Console.WriteLine(iteratedObjects[foundKey]);
+            
+            iteratedObjects.Remove(foundKey);
         }
 
         public override string ToString()
         {
-            return $"edit {Arguments} ({builder?.ToString() ?? ""})";
+            return $"delete {Arguments}";
         }
     }
 }

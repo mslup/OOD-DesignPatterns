@@ -10,11 +10,12 @@ namespace ProjOb
     {
         public string Arguments { get; set; }
         public bool Preprocess();
+        public bool PreprocessFromFile(StreamReader reader);
         public void Execute();
         public string ToString();
     }
 
-    [DataContract]
+    [DataContract, KnownType(typeof(AbstractCommand)), KnownType(typeof(CommandList)), KnownType(typeof(CommandAdd)), KnownType(typeof(CommandFind)), KnownType(typeof(CommandEdit))]
     public abstract class AbstractCommand
     {
         protected static Dictionary<string, Func<IBuilder>> BuilderDictionary
@@ -126,42 +127,47 @@ namespace ProjOb
             }
         }
 
-        protected bool FindCollection(string arg)
+        protected bool FindCollection(string arg, bool silent = false)
         {
             if (!Dictionaries.objectDictionary.ContainsKey(arg))
             {
-                Console.WriteLine($"Unrecognized object type: '{arg}'");
+                if (!silent)
+                    Console.WriteLine($"Unrecognized object type: '{arg}'");
                 return false;
             }
 
             return true;
         }
 
-        protected bool FindCollection(string arg, [NotNullWhen(true)] out IDictionary? collection)
+        protected bool FindCollection(string arg, [NotNullWhen(true)] out IDictionary? collection,
+            bool silent = false)
         {
             if (!Dictionaries.objectDictionary.TryGetValue(arg, out collection))
             {
-                Console.WriteLine($"Unrecognized object type: '{arg}'");
+                if (!silent)
+                    Console.WriteLine($"Unrecognized object type: '{arg}'");
                 return false;
             }
 
             if (collection == null)
             {
-                Console.WriteLine("Collection retrieval failed");
+                if (!silent)
+                    Console.WriteLine("Collection retrieval failed");
                 return false;
             }
 
             return true;
         }
 
-        protected void PrintCollection(IDictionary? collection)
+        protected void PrintCollection(IDictionary? collection, bool silent = false)
         {
             if (collection == null)
                 throw new NullReferenceException();
 
             if (collection.Count == 0)
             {
-                Console.WriteLine("No objects found");
+                if (!silent)
+                    Console.WriteLine("No objects found");
                 return;
             }
 
@@ -171,25 +177,28 @@ namespace ProjOb
             }
         }
 
-        protected void PrintCollection<T>(INewCollection<T> collection)
+        protected void PrintCollection<T>(INewCollection<T> collection, bool silent = false)
         {
             if (collection == null)
                 throw new NullReferenceException();
 
             if (collection.Count == 0)
             {
-                Console.WriteLine("No objects found");
+                if (!silent)
+                    Console.WriteLine("No objects found");
                 return;
             }
 
-            CollectionAlgorithms.Print(collection);
+            if (!silent)
+                CollectionAlgorithms.Print(collection);
         }
 
-        protected bool CheckRepresentation(string rep)
+        protected bool CheckRepresentation(string rep, bool silent = false)
         {
             if (!Dictionaries.Representations.Contains(rep))
             {
-                Console.WriteLine($"Unrecognized representation: {rep}." +
+                if (!silent)
+                    Console.WriteLine($"Unrecognized representation: {rep}." +
                     $"Available represenations: {string.Join(", ", Dictionaries.Representations)}");
                 return false;
             }
@@ -200,7 +209,7 @@ namespace ProjOb
             new Regex(@"\S+\s*[=><]\s*(?:"".*?""|'.*?'|\S+)", RegexOptions.Compiled);
 
         protected bool ParseRequirements(string arguments, string type,
-            out List<Predicate> predicates)
+            out List<Predicate> predicates, bool silent = false)
         {
             var requirementMatches = RequirementRegex.Matches(arguments);
 
@@ -215,7 +224,8 @@ namespace ProjOb
                     ex is ArgumentException ||
                     ex is KeyNotFoundException)
                 {
-                    Console.WriteLine(ex.Message);
+                    if (!silent)
+                        Console.WriteLine(ex.Message);
                     return false;
                 }
             }
@@ -224,15 +234,18 @@ namespace ProjOb
         }
 
         // maybe return bool and vector as out parameter
+
         protected Vector<IFilterable>? RunPredicates(IDictionary? iteratedObjects,
-            List<Predicate>? predicates, bool CheckIfUnique = false)
+            List<Predicate>? predicates, bool CheckIfUnique = false, bool silent = false)
         {
+
             if (iteratedObjects == null || predicates == null)
                 return null;
 
             if (CheckIfUnique && iteratedObjects.Count > 1 && predicates.Count == 0)
             {
-                Console.WriteLine("Provide requirements to uniquely identify an object");
+                if (!silent)
+                    Console.WriteLine("Provide requirements to uniquely identify an object");
                 return null;
             }
 
@@ -255,7 +268,8 @@ namespace ProjOb
                         ex is ArgumentException ||
                         ex is KeyNotFoundException)
                     {
-                        Console.WriteLine("Invalid argument");
+                        if (!silent)
+                            Console.WriteLine("Invalid argument");
                         return null;
                     }
                 }
@@ -265,7 +279,8 @@ namespace ProjOb
 
                 if (CheckIfUnique && result.Count > 0)
                 {
-                    Console.WriteLine("Set requirements don't uniquely identify one object");
+                    if (!silent)
+                        Console.WriteLine("Set requirements don't uniquely identify one object");
                     return null;
                 }
 
@@ -276,12 +291,72 @@ namespace ProjOb
             return result;
         }
 
-        protected bool GetBuilder(string objectType, [NotNullWhen(true)] out IBuilder? builder)
+        // yikes
+        protected string? RunPredicatesGetKey(IDictionary? iteratedObjects,
+           List<Predicate>? predicates, bool CheckIfUnique = false, bool silent = false)
+        {
+
+            string? ret = null;
+            if (iteratedObjects == null || predicates == null)
+                return null;
+
+            if (CheckIfUnique && iteratedObjects.Count > 1 && predicates.Count == 0)
+            {
+                if (!silent)
+                    Console.WriteLine("Provide requirements to uniquely identify an object");
+                return null;
+            }
+
+            Vector<IFilterable>? result = new();
+
+            foreach (DictionaryEntry pair in iteratedObjects)
+            {
+                bool predicatesSatisfied = true;
+                foreach (var predicate in predicates)
+                {
+                    try
+                    {
+                        if (!predicate.Compare(pair.Value as IFilterable))
+                        {
+                            predicatesSatisfied = false;
+                            break;
+                        }
+                    }
+                    catch (Exception ex) when (
+                        ex is ArgumentException ||
+                        ex is KeyNotFoundException)
+                    {
+                        if (!silent)
+                            Console.WriteLine("Invalid argument");
+                        return null;
+                    }
+                }
+
+                if (!predicatesSatisfied)
+                    continue;
+
+                if (CheckIfUnique && result.Count > 0)
+                {
+                    if (!silent)
+                        Console.WriteLine("Set requirements don't uniquely identify one object");
+                    return null;
+                }
+
+                if (pair.Value is IFilterable obj)
+                    ret = (string)pair.Key;
+            }
+
+            return ret;
+        }
+
+        protected bool GetBuilder(string objectType, [NotNullWhen(true)] out IBuilder? builder,
+            bool silent = false)
         {
             if (!BuilderDictionary.TryGetValue(objectType,
                 out Func<IBuilder>? constructor))
             {
-                Console.WriteLine("Unrecognized object type");
+                if (!silent)
+                    Console.WriteLine($"Unrecognized object type: '{objectType}'");
                 builder = null;
                 return false;
             }
@@ -295,8 +370,12 @@ namespace ProjOb
 
         protected enum BuilderType { Create, Edit };
 
-        protected bool FillBuilder(ref IBuilder builder, BuilderType type = BuilderType.Create)
+        protected bool FillBuilder(ref IBuilder builder, BuilderType type = BuilderType.Create,
+            bool silent = false, TextReader? reader = null)
         {
+            if (reader == null)
+                reader = Console.In;
+
             string action = "";
             switch (type)
             {
@@ -305,42 +384,49 @@ namespace ProjOb
             case BuilderType.Edit:
                 action = "edition"; break;
             default:
-                Console.WriteLine("Internal error. Wrong `FillBuilder` method call");
+                if (!silent)
+                    Console.WriteLine("Internal error. Wrong `FillBuilder` method call");
                 return false;
             }
 
-            Console.WriteLine("Available fields: '" +
+            if (!silent)
+            {
+                Console.WriteLine("Available fields: '" +
                string.Join(", ", builder.Setters.Select(x => x.Key)) +
                "'");
-            Console.WriteLine($"Type DONE to confirm {action} or EXIT to abandon.");
+                Console.WriteLine($"Type DONE to confirm {action} or EXIT to abandon.");
+            }
 
             string? input;
             while (true)
             {
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.Write("* ");
-                Console.ResetColor();
+                if (!silent)
+                    using ((ConsoleColorScope)ConsoleColor.White)
+                        Console.Write("* ");
 
-                input = Console.ReadLine();
+                input = reader.ReadLine();
 
                 if (input == null || input.Length == 0)
                     continue;
 
                 if (input.ToLower() == "done")
                 {
-                    Console.WriteLine($"Object {action} request accepted.");
+                    if (!silent)
+                        Console.WriteLine($"Object {action} request accepted.");
                     return true;
                 }
                 else if (input.ToLower() == "exit")
                 {
-                    Console.WriteLine($"Object {action} creation abandoned.");
+                    if (!silent)
+                        Console.WriteLine($"Object {action} creation abandoned.");
                     return false;
                 }
 
                 string[] nameValue = input.Trim().Split("=");
                 if (nameValue.Length != 2)
                 {
-                    Console.WriteLine("Invalid argument");
+                    if (!silent)
+                        Console.WriteLine("Invalid argument");
                     continue;
                 }
 
@@ -353,10 +439,13 @@ namespace ProjOb
                     ex is ArgumentException ||
                     ex is KeyNotFoundException)
                 {
-                    Console.WriteLine("Invalid argument");
+                    if (!silent)
+                        Console.WriteLine("Invalid argument");
                 }
             }
         }
+
+
     }
 
 }

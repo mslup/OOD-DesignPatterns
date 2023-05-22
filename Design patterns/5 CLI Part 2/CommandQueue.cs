@@ -25,7 +25,9 @@ namespace ProjOb
             {
                 ["print"] = Print,
                 ["export"] = Export,
-                ["commit"] = Commit
+                ["commit"] = Commit,
+                ["dismiss"] = Dismiss,
+                ["load"] = Load
             };
             exportOptions = new()
             {
@@ -80,9 +82,8 @@ namespace ProjOb
             {
                 Console.WriteLine();
                 ICommand command = (ICommand)queue.Dequeue();
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine(command.ToString());
-                Console.ForegroundColor = ConsoleColor.Gray;
+                using ((ConsoleColorScope)ConsoleColor.White)
+                    Console.WriteLine(command.ToString());
                 command.Execute();
             }
             Console.WriteLine();
@@ -152,8 +153,8 @@ namespace ProjOb
             string path = Path.Combine(cwd, filename + ".txt");
 
             using StreamWriter writer = new StreamWriter(path);
-                foreach (ICommand command in queue)
-                    writer.WriteLine(command.ToString());
+            foreach (ICommand command in queue)
+                writer.WriteLine(command.ToString());
 
             OpenFile(path);
         }
@@ -181,5 +182,103 @@ namespace ProjOb
                 Console.WriteLine(command.ToString());
             }
         }
+
+        private void Dismiss(string arg)
+        {
+            Console.WriteLine("Queue cleared.");
+            queue.Clear();
+        }
+
+        private void Load(string arg)
+        {
+            Action<string>? load = ExportXml;
+            string filename = "";
+
+            if (arg.Length == 0)
+            {
+                Console.WriteLine("No argument given. " +
+                    "Usage: queue export {filename}");
+                return;
+            }
+
+            string ext = Path.GetExtension(arg);
+            switch (ext)
+            {
+            case ".txt":
+                LoadPlaintext(arg);
+                return;
+            case ".xml":
+                LoadXml(arg);
+                return;
+            default:
+                Console.WriteLine($"Unrecognized extension: `{ext}`. " +
+                    $"Possible extensions: txt, xml");
+                return;
+            }
+
+        }
+
+        private void LoadXml(string filename)
+        {
+            string cwd = Directory.GetCurrentDirectory();
+            string path = Path.Combine(cwd, filename);
+
+            var serializer = new DataContractSerializer(typeof(List<AbstractCommand>));
+
+            FileStream fs;
+            try
+            {
+                fs = new FileStream(path, FileMode.Open);
+            }
+            catch (FileNotFoundException e)
+            {
+                Console.WriteLine($"Could not find file '{filename}'.");
+                return;
+            }
+
+            List<AbstractCommand> list;
+
+            using (XmlReader reader = XmlReader.Create(fs))
+            {
+                list = (List<AbstractCommand>)serializer.ReadObject(reader);
+            }
+
+            foreach (var element in list)
+            {
+                queue.Enqueue(element);
+            }
+        }
+
+        private void LoadPlaintext(string filename)
+        {
+            string cwd = Directory.GetCurrentDirectory();
+            string path = Path.Combine(cwd, filename);
+
+            try
+            {
+                using (StreamReader reader = new StreamReader(path))
+                {
+                    string? line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        //Console.WriteLine(line);
+
+                        var command = CommandFactory.BuildCommand(line);
+
+                        if (command == null)
+                            continue;
+
+                        if (command.PreprocessFromFile(reader))
+                            queue.Enqueue((AbstractCommand)command); // yikes
+                    }
+
+                }
+            }
+            catch (FileNotFoundException e)
+            {
+                Console.WriteLine($"Could not find file '{filename}'.");
+            }
+        }
+
     }
 }

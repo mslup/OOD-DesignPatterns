@@ -5,7 +5,8 @@ using System.Text.RegularExpressions;
 
 namespace ProjOb
 {
-    [DataContract, KnownType(typeof(CommandFind))]
+    [DataContract, KnownType(typeof(CommandFind)),
+        KnownType(typeof(AbstractCommand))]
     public class CommandFind : AbstractCommand, ICommand
     {
         [DataMember] public string Arguments { get; set; }
@@ -37,6 +38,27 @@ namespace ProjOb
             }
 
             if (!ParseRequirements(tokens[1], objectType, out predicates))
+                return false;
+
+            EmptyRequirements = false;
+            return true;
+        }
+
+        public bool PreprocessFromFile(StreamReader reader)
+        {
+            string[] tokens = Arguments.Split(' ', 2);
+            objectType = tokens[0];
+
+            if (!FindCollection(objectType, out iteratedObjects, true))
+                return false;
+
+            if (tokens.Length < 2)
+            {
+                EmptyRequirements = true;
+                return true;
+            }
+
+            if (!ParseRequirements(tokens[1], objectType, out predicates, true))
                 return false;
 
             EmptyRequirements = false;

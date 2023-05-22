@@ -62,13 +62,13 @@ namespace ProjOb
             for (int i = 0; i < 20; i++)
                 arr.Add(i);
 
-            ForEach<int>(arr, (i => Console.Write($"{i} ")));
+            ForEach(arr, (i => Console.Write($"{i} ")));
             Console.WriteLine();
 
-            Console.WriteLine(Find<int>(arr, (d => d == 4)));
-            Console.WriteLine(Find<int>(arr, (d => d == 0)));
-            Console.WriteLine(Find<int>(arr, (d => d == 19)));
-            Console.WriteLine(Find<int>(arr, (d => d == -1)) == null ? "null" : "sth");
+            Console.WriteLine(Find(arr, (d => d == 4)));
+            Console.WriteLine(Find(arr, (d => d == 0)));
+            Console.WriteLine(Find(arr, (d => d == 19)));
+            Console.WriteLine(Find(arr, (d => d == -1)) == null ? "null" : "sth");
 
             Console.WriteLine($"Numbers less than 5: " +
                 $"{CountIf<int>(arr, (d => d < 5))}");

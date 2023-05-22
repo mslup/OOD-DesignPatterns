@@ -1,0 +1,21 @@
+For this part of the project, your task is to: add the delete command, add 
+clearing commands queue and add loading saved commands from the file.
+
+These are the commands that you are required to implement during this task:
+
+1. delete <name_of_the_class> [<requirement> …] - removes given record from collections.
+
+This command allows deleting a given record if requirement conditions (which work the
+same as in the find and edit command) specify one record uniquely.
+
+2. queue dismiss - clears command queue
+
+This command clears all commands which are currently stored in the queue.
+
+3. queue load {filename} – loads commands to the end of the queue from the given file.
+
+This command loads exported commands saved in a given file to the end of the queue.
+The loaded command should be in the same order as they were during exporting.
+Both file formats are supported: XML and plain-text.
+
+NOTE: All features from previous parts should still work.

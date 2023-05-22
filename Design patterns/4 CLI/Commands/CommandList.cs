@@ -3,7 +3,8 @@ using System.Runtime.Serialization;
 
 namespace ProjOb
 {
-    [DataContract, KnownType(typeof(CommandList))]
+    [DataContract, KnownType(typeof(CommandList)),
+        KnownType(typeof(AbstractCommand))]
     public class CommandList : AbstractCommand, ICommand
     {
         [DataMember] public string Arguments { get; set; }
@@ -15,6 +16,11 @@ namespace ProjOb
         public bool Preprocess()
         {
             return FindCollection(Arguments, out objectsToList);
+        }
+
+        public bool PreprocessFromFile(StreamReader reader)
+        {
+            return FindCollection(Arguments, out objectsToList, true);
         }
 
         public void Execute()

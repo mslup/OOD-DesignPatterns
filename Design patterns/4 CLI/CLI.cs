@@ -2,7 +2,7 @@
 
 namespace ProjOb
 {
-    public class CommandFactory
+    public static class CommandFactory
     {
         public static readonly Dictionary<string, Func<ICommand>> CommandDictionary
             = new Dictionary<string, Func<ICommand>>
@@ -10,10 +10,11 @@ namespace ProjOb
             { "list", () => new CommandList() },
             { "find", () => new CommandFind() },
             { "add", () => new CommandAdd() },
-            { "edit", () => new CommandEdit() }
+            { "edit", () => new CommandEdit() },
+            { "delete", () => new CommandDelete() }
         };
 
-        public ICommand? BuildCommand(string arg)
+        public static ICommand? BuildCommand(string arg)
         {
             arg = arg.Trim();
             string[] tokens = arg.Split(' ', 2);
@@ -36,31 +37,28 @@ namespace ProjOb
 
     public static class CLI
     {
-        public static string Prompt { get => "> "; }
         public static void RunApp()
         {
             ByTE.ConstructByTE();
 
             Console.OutputEncoding = Encoding.UTF8;
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("=== Application ByTE ===\n");
-            Console.ResetColor();
+            using ((ConsoleColorScope)ConsoleColor.Cyan)
+                Console.WriteLine("=== Application ByTE ===\n");
 
             var queue = new CommandQueue();
-            var factory = new CommandFactory();
 
             while (true)
             {
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.Write(Prompt);
-                Console.ResetColor();
+                using ((ConsoleColorScope)ConsoleColor.White)
+                    Console.Write("> ");
 
                 string? arg = Console.ReadLine();
 
                 if (arg == null || arg.Length == 0)
                     continue;
+                arg = arg.Trim();
 
-                if (arg.ToLower().Trim() == "exit")
+                if (arg.ToLower() == "exit")
                     break;
 
                 if (arg.StartsWith("queue"))
@@ -69,7 +67,7 @@ namespace ProjOb
                     continue;
                 }
 
-                var command = factory.BuildCommand(arg);
+                var command = CommandFactory.BuildCommand(arg);
 
                 if (command == null)
                     continue;

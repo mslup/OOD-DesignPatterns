@@ -3,26 +3,68 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ProjOb
 {
-    public interface IBuilder
+    [DataContract, KnownType(typeof(IBuilder)),
+        KnownType(typeof(RoomBuilder)), KnownType(typeof(CourseBuilder)), KnownType(typeof(TeacherBuilder)), KnownType(typeof(StudentBuilder))]
+    public abstract class IBuilder
     {
-        public Dictionary<string, Action<string>> Setters { get; }
+        [DataMember] public abstract List<string> updatedFields { get; protected set; }
+        public abstract Dictionary<string, Action<string>> Setters { get; }
         public abstract Dictionary<string, Func<object>> BuildMethods { get; }
-        public object Update(object t);
+        //protected abstract Dictionary<string, bool> updatedFields { get; }
+        public abstract object Update(object t);
+
+        //protected abstract Dictionary<string, Func<object>> Getters { get; set;  }
+        protected abstract Dictionary<string, object> Getters { get; set;  }
+
+        //[OnDeserializing]
+        //protected abstract void OnDeserializing();
+        protected abstract void GetFields();
+
+        public override string ToString()
+        {
+            GetFields(); 
+            var sb = new StringBuilder();
+
+            foreach (var field in updatedFields)
+            {
+                sb.Append(field);
+                sb.Append('=');
+                sb.Append(Getters[field]);
+                //Console.WriteLine(Getters[field]());
+
+                sb.Append("\n");
+            }
+
+            sb.Append("done");
+
+            return sb.ToString();
+        }
     }
 
-    [DataContract, KnownType(typeof(RoomBuilder))]
+    [DataContract, KnownType(typeof(RoomBuilder)), KnownType(typeof(IBuilder))]
     public class RoomBuilder : IBuilder
     {
         [DataMember] private int Number;
         [DataMember] private IRoom.RoomTypeEnum RoomType;
-        [DataMember] private Dictionary<string, bool> updatedFields;
-        public Dictionary<string, Action<string>> Setters { get; }
-        public Dictionary<string, Func<object>> BuildMethods { get; }
+        [DataMember] public override List<string> updatedFields { get; protected set; }
+        public override Dictionary<string, Action<string>> Setters { get; }
+        [DataMember]
+        protected override Dictionary<string, object> Getters { get; set; }
+        protected override void GetFields()
+        {
+            Getters = new Dictionary<string, object>
+            {
+                ["number"] = Number,
+                ["type"] = RoomType
+            };
+        }
+        public override Dictionary<string, Func<object>> BuildMethods { get; }
 
         public RoomBuilder()
         {
@@ -31,17 +73,14 @@ namespace ProjOb
             Setters = new Dictionary<string, Action<string>>
             {
                 ["number"] = SetNumber,
-                ["type"] = SetRoomType,
+                ["type"] = SetRoomType
             };
-            BuildMethods = new Dictionary<string, Func<object>>
+
+            updatedFields = new();
+            BuildMethods = new()
             {
                 ["base"] = Build,
                 ["secondary"] = BuildPartialTxt
-            };
-            updatedFields = new Dictionary<string, bool>
-            {
-                ["number"] = false,
-                ["type"] = false
             };
         }
 
@@ -53,7 +92,7 @@ namespace ProjOb
             if (!Number.SafeTryParse(value))
                 throw new ArgumentException();
 
-            updatedFields["number"] = true;
+            updatedFields.Add("number");
         }
 
         public void SetRoomType(string value)
@@ -65,7 +104,7 @@ namespace ProjOb
             if (!RoomType.SafeTryParse(value))
                 throw new ArgumentException();
 
-            updatedFields["type"] = true;
+            updatedFields.Add("type");
         }
 
         public IRoom Build()
@@ -78,27 +117,38 @@ namespace ProjOb
                 new RoomPartialTxt(Number, RoomType.ToString(), ""));
         }
 
-        public object Update(object room)
+        public override object Update(object room)
         {
-            if (updatedFields["number"])
+            if (updatedFields.Contains("number"))
                 (room as IRoom).Number = Number;
-            if (updatedFields["type"])
+            if (updatedFields.Contains("type"))
                 (room as IRoom).RoomType = RoomType;
 
             return room;
         }
+
     }
 
-    [DataContract, KnownType(typeof(CourseBuilder))]
+    [DataContract, KnownType(typeof(CourseBuilder)), KnownType(typeof(IBuilder))]
     public class CourseBuilder : IBuilder
     {
         [DataMember] private string Name;
         [DataMember] private string Code;
         [DataMember] private int Duration;
-        [DataMember] private Dictionary<string, bool> updatedFields;
-        public Dictionary<string, Action<string>> Setters { get; }
-        public Dictionary<string, Func<object>> BuildMethods { get; }
-
+        [DataMember] public override List<string> updatedFields { get; protected set; }
+        protected override Dictionary<string, object> Getters { get; set; }
+        public override Dictionary<string, Action<string>> Setters { get; }
+        public override Dictionary<string, Func<object>> BuildMethods { get; }
+       
+        protected override void GetFields()
+        {
+            Getters = new Dictionary<string, object>
+            {
+                { "name", Name },
+                { "code", Code },
+                { "duration", Duration }
+            };
+        }
 
         public CourseBuilder()
         {
@@ -111,17 +161,13 @@ namespace ProjOb
                 { "code", SetCode },
                 { "duration", SetDuration }
             };
+     
             BuildMethods = new Dictionary<string, Func<object>>
             {
                 ["base"] = Build,
                 ["secondary"] = BuildPartialTxt
             };
-            updatedFields = new Dictionary<string, bool>
-            {
-                { "name", false },
-                { "code", false},
-                { "duration", false }
-            };
+            updatedFields = new();
         }
 
         public ICourse Build()
@@ -141,7 +187,7 @@ namespace ProjOb
 
             Name = value;
 
-            updatedFields["name"] = true;
+            updatedFields.Add("name");
         }
 
         public void SetCode(string value)
@@ -151,7 +197,7 @@ namespace ProjOb
 
             Code = value;
 
-            updatedFields["code"] = true;
+            updatedFields.Add("code");
         }
 
         public void SetDuration(string value)
@@ -162,33 +208,44 @@ namespace ProjOb
             if (!Duration.SafeTryParse(value))
                 throw new ArgumentException();
 
-            updatedFields["duration"] = true;
+            updatedFields.Add("duration");
         }
 
-        public object Update(object course)
+        public override object Update(object course)
         {
-            if (updatedFields["name"])
+            if (updatedFields.Contains("name"))
                 (course as ICourse).Name = Name;
-            if (updatedFields["code"])
+            if (updatedFields.Contains("code"))
                 (course as ICourse).Code = Code;
-            if (updatedFields["duration"])
+            if (updatedFields.Contains("duration"))
                 (course as ICourse).Duration = Duration;
 
             return course;
         }
     }
 
-    [DataContract, KnownType(typeof(TeacherBuilder))]
+    [DataContract, KnownType(typeof(TeacherBuilder)), KnownType(typeof(IBuilder))]
     public class TeacherBuilder : IBuilder
     {
         [DataMember] private string[] Names;
         [DataMember] private string Surname;
         [DataMember] private string Code;
         [DataMember] private ITeacher.TeacherRankEnum TeacherRank;
-        [DataMember] private Dictionary<string, bool> updatedFields;
-        public Dictionary<string, Action<string>> Setters { get; }
-        public Dictionary<string, Func<object>> BuildMethods { get; }
+        [DataMember] public override List<string> updatedFields { get; protected set; }
+        protected override Dictionary<string, object> Getters { get; set; }
+        public override Dictionary<string, Action<string>> Setters { get; }
+        public override Dictionary<string, Func<object>> BuildMethods { get; }
 
+        protected override void GetFields()
+        {
+            Getters = new Dictionary<string, object>
+            {
+                { "names", Names },
+                { "surname", Surname },
+                { "code", Code },
+                { "rank", TeacherRank }
+            };
+        }
 
         public TeacherBuilder()
         {
@@ -203,18 +260,13 @@ namespace ProjOb
                 { "code", SetCode },
                 { "rank", SetTeacherRank }
             };
+
             BuildMethods = new Dictionary<string, Func<object>>
             {
                 ["base"] = Build,
                 ["secondary"] = BuildPartialTxt
             };
-            updatedFields = new Dictionary<string, bool>
-            {
-                { "names", false },
-                { "surname", false },
-                { "code", false },
-                { "rank", false }
-            };
+            updatedFields = new();
         }
 
         public ITeacher Build()
@@ -228,15 +280,15 @@ namespace ProjOb
                 TeacherRank.ToString(), Code, ""));
         }
 
-        public object Update(object teacher)
+        public override object Update(object teacher)
         {
-            if (updatedFields["names"])
+            if (updatedFields.Contains("names"))
                 (teacher as ITeacher).Names = Names.ToList();
-            if (updatedFields["surname"])
+            if (updatedFields.Contains("surname"))
                 (teacher as ITeacher).Surname = Surname;
-            if (updatedFields["code"])
+            if (updatedFields.Contains("code"))
                 (teacher as ITeacher).Code = Code;
-            if (updatedFields["rank"])
+            if (updatedFields.Contains("rank"))
                 (teacher as ITeacher).TeacherRank = TeacherRank;
 
             return teacher;
@@ -250,7 +302,7 @@ namespace ProjOb
                     .Select(str => str.Trim())
                     .ToArray();
 
-            updatedFields["names"] = true;
+            updatedFields.Add("names");
         }
 
         public void SetSurname(string value)
@@ -260,7 +312,7 @@ namespace ProjOb
 
             Surname = value;
 
-            updatedFields["surname"] = true;
+            updatedFields.Add("surname");
         }
 
         public void SetCode(string value)
@@ -270,7 +322,7 @@ namespace ProjOb
 
             Code = value;
 
-            updatedFields["code"] = true;
+            updatedFields.Add("code");
         }
 
         public void SetTeacherRank(string value)
@@ -282,21 +334,32 @@ namespace ProjOb
             if (!TeacherRank.SafeTryParse(value))
                 throw new ArgumentException();
 
-            updatedFields["rank"] = true;
+            updatedFields.Add("rank");
         }
     }
 
-    [DataContract, KnownType(typeof(StudentBuilder))]
+    [DataContract, KnownType(typeof(StudentBuilder)), KnownType(typeof(IBuilder))]
     public class StudentBuilder : IBuilder
     {
         [DataMember] private string[] Names;
         [DataMember] private string Surname;
         [DataMember] private int Semester;
         [DataMember] private string Code;
-        [DataMember] private Dictionary<string, bool> updatedFields;
-        public Dictionary<string, Action<string>> Setters
-        { get; }
-        public Dictionary<string, Func<object>> BuildMethods { get; }
+        [DataMember] public override List<string> updatedFields { get; protected set; }
+        protected override Dictionary<string, object> Getters { get; set; }
+        public override Dictionary<string, Action<string>> Setters { get; }
+        public override Dictionary<string, Func<object>> BuildMethods { get; }
+
+        protected override void GetFields()
+        {
+            Getters = new Dictionary<string, object>
+            {
+                { "names", Names },
+                { "surname", Surname },
+                { "code", Code },
+                { "semester", Semester }
+            };
+        }
 
         public StudentBuilder()
         {
@@ -311,18 +374,13 @@ namespace ProjOb
                 { "code", SetCode },
                 { "semester", SetSemester }
             };
+    
             BuildMethods = new Dictionary<string, Func<object>>
             {
                 ["base"] = Build,
                 ["secondary"] = BuildPartialTxt
             };
-            updatedFields = new Dictionary<string, bool>
-            {
-                { "names", false },
-                { "surname", false },
-                { "code", false },
-                { "semester", false }
-            };
+            updatedFields = new();
         }
 
         public IStudent Build()
@@ -336,15 +394,15 @@ namespace ProjOb
                 Semester, Code, ""));
         }
 
-        public object Update(object student)
+        public override object Update(object student)
         {
-            if (updatedFields["names"])
+            if (updatedFields.Contains("names"))
                 (student as IStudent).Names = Names.ToList();
-            if (updatedFields["surname"])
+            if (updatedFields.Contains("surname"))
                 (student as IStudent).Surname = Surname;
-            if (updatedFields["code"])
+            if (updatedFields.Contains("code"))
                 (student as IStudent).Code = Code;
-            if (updatedFields["semester"])
+            if (updatedFields.Contains("semester"))
                 (student as IStudent).Semester = Semester;
 
             return student;
@@ -359,7 +417,7 @@ namespace ProjOb
                     .Select(str => str.Trim())
                     .ToArray();
 
-            updatedFields["names"] = true;
+            updatedFields.Add("names");
         }
 
         public void SetSurname(string value)
@@ -369,7 +427,7 @@ namespace ProjOb
 
             Surname = value;
 
-            updatedFields["surname"] = true;
+            updatedFields.Add("surname");
         }
 
         public void SetCode(string value)
@@ -379,7 +437,7 @@ namespace ProjOb
 
             Code = value;
 
-            updatedFields["code"] = true;
+            updatedFields.Add("code");
         }
 
         public void SetSemester(string value)
@@ -390,7 +448,7 @@ namespace ProjOb
             if (!Semester.SafeTryParse(value))
                 throw new ArgumentException();
 
-            updatedFields["semester"] = true;
+            updatedFields.Add("semester");
         }
     }
 }
