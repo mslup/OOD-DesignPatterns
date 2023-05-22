@@ -82,7 +82,7 @@ namespace ProjOb
 
         public override string ToString()
         {
-            return $"edit {Arguments} ({builder?.ToString() ?? ""})";
+            return $"edit {Arguments} \n{builder?.ToString() ?? ""}";
         }
     }
 }

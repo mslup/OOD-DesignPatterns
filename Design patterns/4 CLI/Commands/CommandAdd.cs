@@ -64,6 +64,7 @@ namespace ProjOb
                 return;
 
             Console.WriteLine("Added object:");
+            builder.SetBuildMethods();
             Console.WriteLine(builder.BuildMethods[Representation]());
         }
 

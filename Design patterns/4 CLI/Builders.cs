@@ -13,9 +13,9 @@ namespace ProjOb
         KnownType(typeof(RoomBuilder)), KnownType(typeof(CourseBuilder)), KnownType(typeof(TeacherBuilder)), KnownType(typeof(StudentBuilder))]
     public abstract class IBuilder
     {
-        [DataMember] public abstract List<string> updatedFields { get; protected set; }
+        [DataMember] public abstract HashSet<string> updatedFields { get; protected set; }
         public abstract Dictionary<string, Action<string>> Setters { get; }
-        public abstract Dictionary<string, Func<object>> BuildMethods { get; }
+        public abstract Dictionary<string, Func<object>> BuildMethods { get; set; }
         //protected abstract Dictionary<string, bool> updatedFields { get; }
         public abstract object Update(object t);
 
@@ -25,6 +25,7 @@ namespace ProjOb
         //[OnDeserializing]
         //protected abstract void OnDeserializing();
         protected abstract void GetFields();
+        public abstract void SetBuildMethods();
 
         public override string ToString()
         {
@@ -52,7 +53,7 @@ namespace ProjOb
     {
         [DataMember] private int Number;
         [DataMember] private IRoom.RoomTypeEnum RoomType;
-        [DataMember] public override List<string> updatedFields { get; protected set; }
+        [DataMember] public override HashSet<string> updatedFields { get; protected set; }
         public override Dictionary<string, Action<string>> Setters { get; }
         [DataMember]
         protected override Dictionary<string, object> Getters { get; set; }
@@ -64,7 +65,16 @@ namespace ProjOb
                 ["type"] = RoomType
             };
         }
-        public override Dictionary<string, Func<object>> BuildMethods { get; }
+        public override Dictionary<string, Func<object>> BuildMethods { get; set; }
+
+        public override void SetBuildMethods()
+        {
+            BuildMethods = new()
+            {
+                ["base"] = Build,
+                ["secondary"] = BuildPartialTxt
+            };
+        }
 
         public RoomBuilder()
         {
@@ -135,10 +145,10 @@ namespace ProjOb
         [DataMember] private string Name;
         [DataMember] private string Code;
         [DataMember] private int Duration;
-        [DataMember] public override List<string> updatedFields { get; protected set; }
+        [DataMember] public override HashSet<string> updatedFields { get; protected set; }
         protected override Dictionary<string, object> Getters { get; set; }
         public override Dictionary<string, Action<string>> Setters { get; }
-        public override Dictionary<string, Func<object>> BuildMethods { get; }
+        public override Dictionary<string, Func<object>> BuildMethods { get; set; }
        
         protected override void GetFields()
         {
@@ -147,6 +157,15 @@ namespace ProjOb
                 { "name", Name },
                 { "code", Code },
                 { "duration", Duration }
+            };
+        }
+
+        public override void SetBuildMethods()
+        {
+            BuildMethods = new()
+            {
+                ["base"] = Build,
+                ["secondary"] = BuildPartialTxt
             };
         }
 
@@ -231,10 +250,10 @@ namespace ProjOb
         [DataMember] private string Surname;
         [DataMember] private string Code;
         [DataMember] private ITeacher.TeacherRankEnum TeacherRank;
-        [DataMember] public override List<string> updatedFields { get; protected set; }
+        [DataMember] public override HashSet<string> updatedFields { get; protected set; }
         protected override Dictionary<string, object> Getters { get; set; }
         public override Dictionary<string, Action<string>> Setters { get; }
-        public override Dictionary<string, Func<object>> BuildMethods { get; }
+        public override Dictionary<string, Func<object>> BuildMethods { get; set;  }
 
         protected override void GetFields()
         {
@@ -244,6 +263,15 @@ namespace ProjOb
                 { "surname", Surname },
                 { "code", Code },
                 { "rank", TeacherRank }
+            };
+        }
+
+        public override void SetBuildMethods()
+        {
+            BuildMethods = new()
+            {
+                ["base"] = Build,
+                ["secondary"] = BuildPartialTxt
             };
         }
 
@@ -345,10 +373,19 @@ namespace ProjOb
         [DataMember] private string Surname;
         [DataMember] private int Semester;
         [DataMember] private string Code;
-        [DataMember] public override List<string> updatedFields { get; protected set; }
+        [DataMember] public override HashSet<string> updatedFields { get; protected set; }
         protected override Dictionary<string, object> Getters { get; set; }
         public override Dictionary<string, Action<string>> Setters { get; }
-        public override Dictionary<string, Func<object>> BuildMethods { get; }
+        public override Dictionary<string, Func<object>> BuildMethods { get; set; }
+
+        public override void SetBuildMethods()
+        {
+            BuildMethods = new()
+            {
+                ["base"] = Build,
+                ["secondary"] = BuildPartialTxt
+            };
+        }
 
         protected override void GetFields()
         {

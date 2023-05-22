@@ -192,7 +192,6 @@ namespace ProjOb
         private void Load(string arg)
         {
             Action<string>? load = ExportXml;
-            string filename = "";
 
             if (arg.Length == 0)
             {
