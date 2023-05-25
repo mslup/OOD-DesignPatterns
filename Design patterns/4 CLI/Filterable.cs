@@ -1,10 +1,13 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ProjOb
 {
     public interface IFilterable
     {
         string Representation { get; }
+        string Type { get; }
+        string ID { get; }
         IComparable GetFieldByName(string name);
         static string GetFieldTypeByName(string name) { return ""; }
     }
@@ -17,6 +20,9 @@ namespace ProjOb
             { "number", "int" },
             { "type", "enum" }
         };
+
+        public string Type { get => "room"; }
+        public string ID { get => Number.ToString(); }
 
         [MemberNotNull(nameof(nameFieldPairs))]
         public void InitDictionary()
@@ -47,6 +53,8 @@ namespace ProjOb
             { "number", "int" },
             { "type", "enum" }
         };
+        public string Type { get => "room"; }
+        public string ID { get => Number.ToString(); }
 
         [MemberNotNull(nameof(nameFieldPairs))]
         public void InitDictionary()
@@ -78,6 +86,8 @@ namespace ProjOb
             { "code", "string" },
             { "duration", "int" }
         };
+        public string Type { get => "course"; }
+        public string ID { get => Code; }
 
         [MemberNotNull(nameof(nameFieldPairs))]
         public void InitDictionary()
@@ -110,6 +120,8 @@ namespace ProjOb
             { "code", "string" },
             { "duration", "int" }
         };
+        public string Type { get => "course"; }
+        public string ID { get => Code; }
 
         [MemberNotNull(nameof(nameFieldPairs))]
         public void InitDictionary()
@@ -144,6 +156,8 @@ namespace ProjOb
             { "rank", "enum" },
             { "code", "string" },
         };
+        public string Type { get => "teacher"; }
+        public string ID { get => Code; }
 
         [MemberNotNull(nameof(nameFieldPairs))]
         public void InitDictionary()
@@ -181,6 +195,9 @@ namespace ProjOb
             { "code", "string" },
         };
 
+        public string Type { get => "teacher"; }
+        public string ID { get => Code; }
+
         [MemberNotNull(nameof(nameFieldPairs))]
         public void InitDictionary()
         {
@@ -217,6 +234,9 @@ namespace ProjOb
             { "code", "string" },
         };
 
+        public string Type { get => "student"; }
+        public string ID { get => Code; }
+
         [MemberNotNull(nameof(nameFieldPairs))]
         public void InitDictionary()
         {
@@ -251,6 +271,9 @@ namespace ProjOb
             { "semester", "int" },
             { "code", "string" },
         };
+
+        public string Type { get => "student"; }
+        public string ID { get => Code; }
 
         [MemberNotNull(nameof(nameFieldPairs))]
         public void InitDictionary()

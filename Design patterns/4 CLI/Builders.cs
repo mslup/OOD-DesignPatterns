@@ -9,27 +9,20 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ProjOb
 {
-    [DataContract, KnownType(typeof(IBuilder)),
+    [DataContract, KnownType(typeof(AbstractBuilder)),
         KnownType(typeof(RoomBuilder)), KnownType(typeof(CourseBuilder)), KnownType(typeof(TeacherBuilder)), KnownType(typeof(StudentBuilder))]
-    public abstract class IBuilder
+    public abstract class AbstractBuilder
     {
         [DataMember] public abstract HashSet<string> updatedFields { get; protected set; }
-        public abstract Dictionary<string, Action<string>> Setters { get; }
         public abstract Dictionary<string, Func<object>> BuildMethods { get; set; }
-        //protected abstract Dictionary<string, bool> updatedFields { get; }
+        protected abstract Dictionary<string, object> Getters { get; set; }
+        public abstract Dictionary<string, Action<object>> Setters { get; }
         public abstract object Update(object t);
-
-        //protected abstract Dictionary<string, Func<object>> Getters { get; set;  }
-        protected abstract Dictionary<string, object> Getters { get; set;  }
-
-        //[OnDeserializing]
-        //protected abstract void OnDeserializing();
-        protected abstract void GetFields();
+        protected abstract void FillGettersDictionary();
         public abstract void SetBuildMethods();
-
         public override string ToString()
         {
-            GetFields(); 
+            FillGettersDictionary();
             var sb = new StringBuilder();
 
             foreach (var field in updatedFields)
@@ -48,16 +41,16 @@ namespace ProjOb
         }
     }
 
-    [DataContract, KnownType(typeof(RoomBuilder)), KnownType(typeof(IBuilder))]
-    public class RoomBuilder : IBuilder
+    [DataContract, KnownType(typeof(RoomBuilder)), KnownType(typeof(AbstractBuilder))]
+    public class RoomBuilder : AbstractBuilder
     {
         [DataMember] private int Number;
         [DataMember] private IRoom.RoomTypeEnum RoomType;
         [DataMember] public override HashSet<string> updatedFields { get; protected set; }
-        public override Dictionary<string, Action<string>> Setters { get; }
+        public override Dictionary<string, Action<object>> Setters { get; }
         [DataMember]
         protected override Dictionary<string, object> Getters { get; set; }
-        protected override void GetFields()
+        protected override void FillGettersDictionary()
         {
             Getters = new Dictionary<string, object>
             {
@@ -80,7 +73,7 @@ namespace ProjOb
         {
             Number = 0;
             RoomType = IRoom.RoomTypeEnum.other;
-            Setters = new Dictionary<string, Action<string>>
+            Setters = new ()
             {
                 ["number"] = SetNumber,
                 ["type"] = SetRoomType
@@ -94,24 +87,38 @@ namespace ProjOb
             };
         }
 
-        public void SetNumber(string value)
+        public void SetNumber(object value)
         {
             if (value == null)
                 throw new ArgumentException();
 
-            if (!Number.SafeTryParse(value))
+            if (value is string)
+            {
+                if (!Number.SafeTryParse((string)value))
+                    throw new ArgumentException();
+            }
+            else if (value is int)
+                Number = (int)value;
+            else
                 throw new ArgumentException();
 
             updatedFields.Add("number");
         }
 
-        public void SetRoomType(string value)
+        public void SetRoomType(object value)
         {
             if (value == null)
                 throw new ArgumentException();
 
             // unwanted behaviour when value > 4
-            if (!RoomType.SafeTryParse(value))
+            if (value is string)
+            {
+                if (!RoomType.SafeTryParse((string)value))
+                    throw new ArgumentException();
+            }
+            else if (value is IRoom.RoomTypeEnum)
+                RoomType = (IRoom.RoomTypeEnum)value;
+            else
                 throw new ArgumentException();
 
             updatedFields.Add("type");
@@ -136,21 +143,20 @@ namespace ProjOb
 
             return room;
         }
-
     }
 
-    [DataContract, KnownType(typeof(CourseBuilder)), KnownType(typeof(IBuilder))]
-    public class CourseBuilder : IBuilder
+    [DataContract, KnownType(typeof(CourseBuilder)), KnownType(typeof(AbstractBuilder))]
+    public class CourseBuilder : AbstractBuilder
     {
         [DataMember] private string Name;
         [DataMember] private string Code;
         [DataMember] private int Duration;
         [DataMember] public override HashSet<string> updatedFields { get; protected set; }
         protected override Dictionary<string, object> Getters { get; set; }
-        public override Dictionary<string, Action<string>> Setters { get; }
+        public override Dictionary<string, Action<object>> Setters { get; }
         public override Dictionary<string, Func<object>> BuildMethods { get; set; }
-       
-        protected override void GetFields()
+
+        protected override void FillGettersDictionary()
         {
             Getters = new Dictionary<string, object>
             {
@@ -174,13 +180,13 @@ namespace ProjOb
             Name = "";
             Code = "";
             Duration = 0;
-            Setters = new Dictionary<string, Action<string>>
+            Setters = new ()
             {
                 { "name", SetName },
                 { "code", SetCode },
                 { "duration", SetDuration }
             };
-     
+
             BuildMethods = new Dictionary<string, Func<object>>
             {
                 ["base"] = Build,
@@ -199,32 +205,45 @@ namespace ProjOb
                 new CoursePartialTxt(Name, Code, Duration, ""));
         }
 
-        public void SetName(string value)
+        public void SetName(object value)
         {
             if (value == null)
                 throw new ArgumentException();
 
-            Name = value;
+            if (value is string)
+                Name = (string)value;
+            else
+                throw new ArgumentException();
 
             updatedFields.Add("name");
         }
 
-        public void SetCode(string value)
+        public void SetCode(object value)
         {
             if (value == null)
                 throw new ArgumentException();
 
-            Code = value;
+            if (value is string)
+                Code = (string)value;
+            else
+                throw new ArgumentException();
 
             updatedFields.Add("code");
         }
 
-        public void SetDuration(string value)
+        public void SetDuration(object value)
         {
             if (value == null)
                 throw new ArgumentException();
 
-            if (!Duration.SafeTryParse(value))
+            if (value is string)
+            {
+                if (!Duration.SafeTryParse((string)value))
+                    throw new ArgumentException();
+            }
+            else if (value is int)
+                Duration = (int)value;
+            else
                 throw new ArgumentException();
 
             updatedFields.Add("duration");
@@ -232,6 +251,9 @@ namespace ProjOb
 
         public override object Update(object course)
         {
+            if (course is not ICourse)
+                throw new ArgumentException();
+
             if (updatedFields.Contains("name"))
                 (course as ICourse).Name = Name;
             if (updatedFields.Contains("code"))
@@ -243,8 +265,8 @@ namespace ProjOb
         }
     }
 
-    [DataContract, KnownType(typeof(TeacherBuilder)), KnownType(typeof(IBuilder))]
-    public class TeacherBuilder : IBuilder
+    [DataContract, KnownType(typeof(TeacherBuilder)), KnownType(typeof(AbstractBuilder))]
+    public class TeacherBuilder : AbstractBuilder
     {
         [DataMember] private string[] Names;
         [DataMember] private string Surname;
@@ -252,10 +274,10 @@ namespace ProjOb
         [DataMember] private ITeacher.TeacherRankEnum TeacherRank;
         [DataMember] public override HashSet<string> updatedFields { get; protected set; }
         protected override Dictionary<string, object> Getters { get; set; }
-        public override Dictionary<string, Action<string>> Setters { get; }
-        public override Dictionary<string, Func<object>> BuildMethods { get; set;  }
+        public override Dictionary<string, Action<object>> Setters { get; }
+        public override Dictionary<string, Func<object>> BuildMethods { get; set; }
 
-        protected override void GetFields()
+        protected override void FillGettersDictionary()
         {
             Getters = new Dictionary<string, object>
             {
@@ -281,7 +303,7 @@ namespace ProjOb
             Surname = "";
             Code = "";
             TeacherRank = ITeacher.TeacherRankEnum.KiB;
-            Setters = new Dictionary<string, Action<string>>
+            Setters = new ()
             {
                 { "names", SetNames },
                 { "surname", SetSurname },
@@ -321,53 +343,69 @@ namespace ProjOb
 
             return teacher;
         }
-        public void SetNames(string value)
+        public void SetNames(object value)
         {
             if (value == null)
                 throw new ArgumentException();
 
-            Names = value.Split(",")
-                    .Select(str => str.Trim())
-                    .ToArray();
+            if (value is string)
+                Names = ((string)value).Split(",")
+                        .Select(str => str.Trim())
+                        .ToArray();
+            else
+                throw new ArgumentException();
 
             updatedFields.Add("names");
         }
 
-        public void SetSurname(string value)
+        public void SetSurname(object value)
         {
             if (value == null)
                 throw new ArgumentException();
 
-            Surname = value;
+            if (value is string)
+                Surname = (string)value;
+            else
+                throw new ArgumentException();
 
             updatedFields.Add("surname");
         }
 
-        public void SetCode(string value)
+        public void SetCode(object value)
         {
             if (value == null)
                 throw new ArgumentException();
 
-            Code = value;
+            if (value is string)
+                Code = (string)value;
+            else
+                throw new ArgumentException();
 
             updatedFields.Add("code");
         }
 
-        public void SetTeacherRank(string value)
+        public void SetTeacherRank(object value)
         {
             if (value == null)
                 throw new ArgumentException();
 
             // unwanted behaviour same as in RoomBuilder
-            if (!TeacherRank.SafeTryParse(value))
+            if (value is string)
+            {
+                if (!TeacherRank.SafeTryParse((string)value))
+                    throw new ArgumentException();
+            }
+            else if (value is ITeacher.TeacherRankEnum)
+                TeacherRank = (ITeacher.TeacherRankEnum)value;
+            else
                 throw new ArgumentException();
 
             updatedFields.Add("rank");
         }
     }
 
-    [DataContract, KnownType(typeof(StudentBuilder)), KnownType(typeof(IBuilder))]
-    public class StudentBuilder : IBuilder
+    [DataContract, KnownType(typeof(StudentBuilder)), KnownType(typeof(AbstractBuilder))]
+    public class StudentBuilder : AbstractBuilder
     {
         [DataMember] private string[] Names;
         [DataMember] private string Surname;
@@ -375,7 +413,7 @@ namespace ProjOb
         [DataMember] private string Code;
         [DataMember] public override HashSet<string> updatedFields { get; protected set; }
         protected override Dictionary<string, object> Getters { get; set; }
-        public override Dictionary<string, Action<string>> Setters { get; }
+        public override Dictionary<string, Action<object>> Setters { get; }
         public override Dictionary<string, Func<object>> BuildMethods { get; set; }
 
         public override void SetBuildMethods()
@@ -387,7 +425,7 @@ namespace ProjOb
             };
         }
 
-        protected override void GetFields()
+        protected override void FillGettersDictionary()
         {
             Getters = new Dictionary<string, object>
             {
@@ -404,14 +442,14 @@ namespace ProjOb
             Surname = "";
             Code = "";
             Semester = 0;
-            Setters = new Dictionary<string, Action<string>>
+            Setters = new ()
             {
                 { "names", SetNames },
                 { "surname", SetSurname },
                 { "code", SetCode },
                 { "semester", SetSemester }
             };
-    
+
             BuildMethods = new Dictionary<string, Func<object>>
             {
                 ["base"] = Build,
@@ -445,44 +483,60 @@ namespace ProjOb
             return student;
         }
 
-        public void SetNames(string value)
+        public void SetNames(object value)
         {
             if (value == null)
                 throw new ArgumentException();
 
-            Names = value.Split(",")
-                    .Select(str => str.Trim())
-                    .ToArray();
+            if (value is string)
+                Names = ((string)value).Split(",")
+                        .Select(str => str.Trim())
+                        .ToArray();
+            else
+                throw new ArgumentException();
 
             updatedFields.Add("names");
         }
 
-        public void SetSurname(string value)
+        public void SetSurname(object value)
         {
             if (value == null)
                 throw new ArgumentException();
 
-            Surname = value;
+            if (value is string)
+                Surname = (string)value;
+            else
+                throw new ArgumentException();
 
             updatedFields.Add("surname");
         }
 
-        public void SetCode(string value)
+        public void SetCode(object value)
         {
             if (value == null)
                 throw new ArgumentException();
 
-            Code = value;
+            if (value is string)
+                Code = (string)value;
+            else
+                throw new ArgumentException();
 
             updatedFields.Add("code");
         }
 
-        public void SetSemester(string value)
+        public void SetSemester(object value)
         {
             if (value == null)
                 throw new ArgumentException();
 
-            if (!Semester.SafeTryParse(value))
+            if (value is string)
+            {
+                if (!Semester.SafeTryParse((string)value))
+                    throw new ArgumentException();
+            }
+            else if (value is int)
+                Semester = (int)value;
+            else
                 throw new ArgumentException();
 
             updatedFields.Add("semester");

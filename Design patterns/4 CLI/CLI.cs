@@ -2,26 +2,29 @@
 
 namespace ProjOb
 {
+
     public static class CommandFactory
     {
-        public static readonly Dictionary<string, Func<ICommand>> CommandDictionary
-            = new Dictionary<string, Func<ICommand>>
-        {
-            { "list", () => new CommandList() },
-            { "find", () => new CommandFind() },
-            { "add", () => new CommandAdd() },
-            { "edit", () => new CommandEdit() },
-            { "delete", () => new CommandDelete() }
-        };
+        public static readonly Dictionary<string, Func<AbstractCommand>> CommandDictionary
+            = new ()
+            {
+                ["list"] = () => new CommandList(),
+                ["find"] = () => new CommandFind(),
+                ["add"] = () => new CommandAdd(),
+                ["edit"] = () => new CommandEdit(),
+                ["delete"] = () => new CommandDelete()
+            };
 
-        public static ICommand? BuildCommand(string arg)
+ 
+
+        public static AbstractCommand? BuildCommand(string arg)
         {
             arg = arg.Trim();
             string[] tokens = arg.Split(' ', 2);
 
-            if (CommandDictionary.TryGetValue(tokens[0], out Func<ICommand>? commandConstructor))
+            if (CommandDictionary.TryGetValue(tokens[0], out Func<AbstractCommand>? commandConstructor))
             {
-                ICommand command = commandConstructor();
+                AbstractCommand command = commandConstructor();
                 if (tokens.Length > 1)
                     command.Arguments = tokens[1];
                 else
@@ -35,6 +38,8 @@ namespace ProjOb
         }
     }
 
+ 
+
     public static class CLI
     {
         public static void RunApp()
@@ -44,8 +49,6 @@ namespace ProjOb
             Console.OutputEncoding = Encoding.UTF8;
             using ((ConsoleColorScope)ConsoleColor.Cyan)
                 Console.WriteLine("=== Application ByTE ===\n");
-
-            var queue = new CommandQueue();
 
             while (true)
             {
@@ -61,19 +64,18 @@ namespace ProjOb
                 if (arg.ToLower() == "exit")
                     break;
 
-                if (arg.StartsWith("queue"))
-                {
-                    queue.HandleQueueCommand(arg);
+                if (CommandHistory.HandleHistoryCommands(arg))
                     continue;
-                }
 
                 var command = CommandFactory.BuildCommand(arg);
-
                 if (command == null)
                     continue;
 
                 if (command.Preprocess())
-                    queue.Push(command);
+                {
+                    CommandHistory.Register(command);
+                    command.Execute();
+                }
 
             }
         }

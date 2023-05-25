@@ -10,11 +10,12 @@ namespace ProjOb
 {
     [DataContract, KnownType(typeof(CommandAdd)),
         KnownType(typeof(AbstractCommand))]
-    public class CommandAdd : AbstractCommand, ICommand
+    public class CommandAdd : AbstractCommand
     {
-        [DataMember] public string Arguments { get; set; }
+        [DataMember] override public string Arguments { get; set; }
         [DataMember] private string Representation;
-        [DataMember] private IBuilder? builder;
+        [DataMember] private AbstractBuilder? builder;
+        private IFilterable built;
 
         public CommandAdd()
         {
@@ -22,7 +23,7 @@ namespace ProjOb
             Representation = "";
         }
 
-        public bool Preprocess()
+        public override bool Preprocess()
         {
             string[] tokens = Arguments.Split(' ');
             if (tokens.Length > 2)
@@ -43,7 +44,7 @@ namespace ProjOb
             return FillBuilder(ref builder, BuilderType.Create);
         }
 
-        public bool PreprocessFromFile(StreamReader reader)
+        public override bool PreprocessFromFile(StreamReader reader)
         {
             string[] tokens = Arguments.Split(' '); 
 
@@ -58,14 +59,27 @@ namespace ProjOb
             return FillBuilder(ref builder, BuilderType.Create, true, reader);
         }
 
-        public void Execute()
+        public override void Execute()
         {
             if (builder == null)
                 return;
 
             Console.WriteLine("Added object:");
             builder.SetBuildMethods();
-            Console.WriteLine(builder.BuildMethods[Representation]());
+            built = (IFilterable)builder.BuildMethods[Representation]();
+            Console.WriteLine(built);
+        }
+
+        public override void Undo()
+        {
+            Dictionaries.Remove(built);
+            Console.WriteLine($"Deleted object: \n{built}");
+        }
+
+        public override void Redo()
+        {
+            Dictionaries.Add(built);
+            Console.WriteLine($"Created object: \n{built}");
         }
 
         public override string ToString()

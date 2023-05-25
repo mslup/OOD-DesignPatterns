@@ -1,0 +1,17 @@
+In this task, you need to modify the behaviour of a previously added command queue. 
+All commands should be now executed immediately without committing. All queue commands 
+(commit, dismiss, print) should be removed except for queue export and queue load, 
+which should be renamed to just "export" and "load" and export/load all executed commands. 
+You should keep a history of all executed commands and implement the following:
+
+1. history - list all executed commands
+
+2. undo - reverts the changes made by the most recently executed command
+
+3. redo - reapplies the changes made by the most recently undone command
+
+As already mentioned, the program should keep a "command history" to
+allow for multiple undo/redo steps.
+
+Note that your solution should be easily extensible in terms of supporting
+undo/redo operations for newly added commands.

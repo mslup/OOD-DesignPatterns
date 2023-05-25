@@ -6,12 +6,13 @@ namespace ProjOb
 {
     [DataContract, KnownType(typeof(CommandEdit)),
         KnownType(typeof(AbstractCommand))]
-    public class CommandEdit : AbstractCommand, ICommand
+    public class CommandEdit : AbstractCommand
     {
-        [DataMember] public string Arguments { get; set; }
+        [DataMember] override public string Arguments { get; set; }
         [DataMember] private string objectType;
-        [DataMember] private IBuilder? builder;
-        [DataMember] private List<Predicate>? predicates;
+        [DataMember] private AbstractBuilder? builder;
+        [DataMember] private AbstractBuilder? memento;
+        [DataMember] private List<Requirement>? predicates;
         private IFilterable? found;
         private IDictionary? iteratedObjects;
         public CommandEdit()
@@ -20,7 +21,7 @@ namespace ProjOb
             Arguments = "";
         }
 
-        public bool Preprocess()
+        public override bool Preprocess()
         {
             string[] tokens = Arguments.Split(' ', 2);
 
@@ -36,7 +37,7 @@ namespace ProjOb
             return FillBuilder(ref builder, BuilderType.Edit);
         }
 
-        public bool PreprocessFromFile(StreamReader reader)
+        public override bool PreprocessFromFile(StreamReader reader)
         {
             string[] tokens = Arguments.Split(' ', 2);
 
@@ -49,10 +50,11 @@ namespace ProjOb
             if (!GetBuilder(tokens[0], out builder, true))
                 return false;
 
-            return FillBuilder(ref builder, BuilderType.Edit, true, reader);
+            return FillBuilder(ref builder, BuilderType.Edit);
         }
 
-        public void Execute()
+
+        public override void Execute()
         {
             if (builder == null)
                 return;
@@ -73,7 +75,27 @@ namespace ProjOb
 
             found = foundVector[0];
 
+            FillMemento(builder, found, objectType, out memento);
+
             Console.WriteLine("Found object:");
+            Console.WriteLine(found);
+            builder.Update(found);
+            Console.WriteLine("editted to:");
+            Console.WriteLine(found);
+        }
+
+        public override void Undo()
+        {
+            Console.WriteLine("Object:");
+            Console.WriteLine(found);
+            memento.Update(found);
+            Console.WriteLine("editted to:");
+            Console.WriteLine(found);
+        }
+
+        public override void Redo()
+        {
+            Console.WriteLine("Object:");
             Console.WriteLine(found);
             builder.Update(found);
             Console.WriteLine("editted to:");

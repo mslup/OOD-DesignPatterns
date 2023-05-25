@@ -5,30 +5,40 @@ namespace ProjOb
 {
     [DataContract, KnownType(typeof(CommandList)),
         KnownType(typeof(AbstractCommand))]
-    public class CommandList : AbstractCommand, ICommand
+    public class CommandList : AbstractCommand
     {
-        [DataMember] public string Arguments { get; set; }
+        [DataMember] public override string Arguments { get; set; }
         private IDictionary? objectsToList;
 
         public CommandList() => Arguments = "";
 
 
-        public bool Preprocess()
+        public override bool Preprocess()
         {
             return FindCollection(Arguments, out objectsToList);
         }
 
-        public bool PreprocessFromFile(StreamReader reader)
+        public override bool PreprocessFromFile(StreamReader reader)
         {
             return FindCollection(Arguments, out objectsToList, true);
         }
 
-        public void Execute()
+        public override void Execute()
         {
             if (objectsToList == null) 
                 FindCollection(Arguments, out objectsToList);
 
             PrintCollection(objectsToList);
+        }
+
+        public override void Undo()
+        {
+
+        }
+
+        public override void Redo()
+        {
+            Execute();
         }
 
         public override string ToString()

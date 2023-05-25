@@ -48,5 +48,15 @@ namespace ProjOb
         {
             StudentDict[student.Code] = student;
         }
+
+        static public void Add(IFilterable obj)
+        {
+            objectDictionary[obj.Type].Add(obj.ID, obj);
+        }
+
+        static public void Remove(IFilterable obj)
+        {
+            objectDictionary[obj.Type].Remove(obj.ID);
+        }
     }
 }

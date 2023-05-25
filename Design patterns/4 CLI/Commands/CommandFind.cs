@@ -7,10 +7,10 @@ namespace ProjOb
 {
     [DataContract, KnownType(typeof(CommandFind)),
         KnownType(typeof(AbstractCommand))]
-    public class CommandFind : AbstractCommand, ICommand
+    public class CommandFind : AbstractCommand
     {
-        [DataMember] public string Arguments { get; set; }
-        [DataMember] private List<Predicate>? predicates;
+        [DataMember] override public string Arguments { get; set; }
+        [DataMember] private List<Requirement>? predicates;
         [DataMember] private bool EmptyRequirements;
         [DataMember] private string objectType;
         private IDictionary? iteratedObjects;
@@ -23,7 +23,7 @@ namespace ProjOb
             EmptyRequirements = true;
         }
 
-        public bool Preprocess()
+        public override bool Preprocess()
         {
             string[] tokens = Arguments.Split(' ', 2);
             objectType = tokens[0];
@@ -44,7 +44,7 @@ namespace ProjOb
             return true;
         }
 
-        public bool PreprocessFromFile(StreamReader reader)
+        public override bool PreprocessFromFile(StreamReader reader)
         {
             string[] tokens = Arguments.Split(' ', 2);
             objectType = tokens[0];
@@ -65,7 +65,7 @@ namespace ProjOb
             return true;
         }
 
-        public void Execute()
+        public override void Execute()
         {
             if (iteratedObjects == null)
                 FindCollection(objectType, out iteratedObjects);
@@ -82,6 +82,16 @@ namespace ProjOb
                 return;
 
             PrintCollection(foundObjectsCollection);
+        }
+
+        public override void Undo()
+        {
+
+        }
+
+        public override void Redo()
+        {
+            Execute();
         }
 
         public override string ToString()

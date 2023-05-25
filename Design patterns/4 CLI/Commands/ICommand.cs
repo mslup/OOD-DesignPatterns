@@ -6,19 +6,18 @@ using System.Xml.Serialization;
 
 namespace ProjOb
 {
-    public interface ICommand
-    {
-        public string Arguments { get; set; }
-        public bool Preprocess();
-        public bool PreprocessFromFile(StreamReader reader);
-        public void Execute();
-        public string ToString();
-    }
-
     [DataContract, KnownType(typeof(AbstractCommand)), KnownType(typeof(CommandList)), KnownType(typeof(CommandAdd)), KnownType(typeof(CommandFind)), KnownType(typeof(CommandEdit))]
     public abstract class AbstractCommand
     {
-        protected static Dictionary<string, Func<IBuilder>> BuilderDictionary
+        public abstract string Arguments { get; set; }
+        public abstract bool Preprocess();
+        public abstract bool PreprocessFromFile(StreamReader reader);
+        public abstract void Execute();
+        public abstract void Undo();
+        public abstract void Redo();
+        public abstract override string ToString();
+    
+        protected static Dictionary<string, Func<AbstractBuilder>> BuilderDictionary
             = new()
             {
                 ["room"] = () => new RoomBuilder(),
@@ -27,8 +26,8 @@ namespace ProjOb
                 ["student"] = () => new StudentBuilder()
             };
 
-        [DataContract, KnownType(typeof(Predicate))]
-        protected class Predicate
+        [DataContract, KnownType(typeof(Requirement))]
+        protected class Requirement
         {
             private static Dictionary<string, Func<string, string>> typeDictionary
             = new Dictionary<string, Func<string, string>>
@@ -49,7 +48,7 @@ namespace ProjOb
             private string FieldType { get; set; }
             private string ValueString { get; set; }
 
-            public Predicate(string objectType, string requirement)
+            public Requirement(string objectType, string requirement)
             {
                 string[] parts = Regex.Split(requirement, @"([<=>])");
                 if (parts.Length != 3)
@@ -209,7 +208,7 @@ namespace ProjOb
             new Regex(@"\S+\s*[=><]\s*(?:"".*?""|'.*?'|\S+)", RegexOptions.Compiled);
 
         protected bool ParseRequirements(string arguments, string type,
-            out List<Predicate> predicates, bool silent = false)
+            out List<Requirement> predicates, bool silent = false)
         {
             var requirementMatches = RequirementRegex.Matches(arguments);
 
@@ -218,7 +217,7 @@ namespace ProjOb
             {
                 try
                 {
-                    predicates.Add(new Predicate(type, match.Value));
+                    predicates.Add(new Requirement(type, match.Value));
                 }
                 catch (Exception ex) when (
                     ex is ArgumentException ||
@@ -236,7 +235,7 @@ namespace ProjOb
         // maybe return bool and vector as out parameter
 
         protected Vector<IFilterable>? RunPredicates(IDictionary? iteratedObjects,
-            List<Predicate>? predicates, bool CheckIfUnique = false, bool silent = false)
+            List<Requirement>? predicates, bool CheckIfUnique = false, bool silent = false)
         {
 
             if (iteratedObjects == null || predicates == null)
@@ -292,8 +291,10 @@ namespace ProjOb
         }
 
         // yikes
+        // since we have ID now in IFilterable, this method is obsolete
+        // -- change usage in CommandDelete
         protected string? RunPredicatesGetKey(IDictionary? iteratedObjects,
-           List<Predicate>? predicates, bool CheckIfUnique = false, bool silent = false)
+           List<Requirement>? predicates, bool CheckIfUnique = false, bool silent = false)
         {
 
             string? ret = null;
@@ -349,11 +350,11 @@ namespace ProjOb
             return ret;
         }
 
-        protected bool GetBuilder(string objectType, [NotNullWhen(true)] out IBuilder? builder,
+        protected bool GetBuilder(string objectType, [NotNullWhen(true)] out AbstractBuilder? builder,
             bool silent = false)
         {
             if (!BuilderDictionary.TryGetValue(objectType,
-                out Func<IBuilder>? constructor))
+                out Func<AbstractBuilder>? constructor))
             {
                 if (!silent)
                     Console.WriteLine($"Unrecognized object type: '{objectType}'");
@@ -370,7 +371,8 @@ namespace ProjOb
 
         protected enum BuilderType { Create, Edit };
 
-        protected bool FillBuilder(ref IBuilder builder, BuilderType type = BuilderType.Create,
+        protected bool FillBuilder(ref AbstractBuilder builder, 
+            BuilderType type,
             bool silent = false, TextReader? reader = null)
         {
             if (reader == null)
@@ -422,18 +424,19 @@ namespace ProjOb
                     return false;
                 }
 
-                string[] nameValue = input.Trim().Split("=");
-                if (nameValue.Length != 2)
+                string[] fieldAndValueArray = input.Trim().Split("=");
+                if (fieldAndValueArray.Length != 2)
                 {
                     if (!silent)
                         Console.WriteLine("Invalid argument");
                     continue;
                 }
-
-                // trygetvalue ...
+                string fieldName = fieldAndValueArray[0].Trim();
+                string valueString = fieldAndValueArray[1].TrimWQ();
+                // trygetvalue...
                 try
-                {
-                    builder.Setters[nameValue[0].Trim()](nameValue[1].TrimWQ());
+                {      
+                    builder.Setters[fieldName](valueString);
                 }
                 catch (Exception ex) when (
                     ex is ArgumentException ||
@@ -445,6 +448,19 @@ namespace ProjOb
             }
         }
 
+        protected bool FillMemento(AbstractBuilder builder, IFilterable obj, 
+            string objectType, out AbstractBuilder memento)
+        {
+            if (!GetBuilder(objectType, out memento, true))
+                return false;
+
+            foreach (var fieldName in builder.updatedFields)
+            {
+                memento.Setters[fieldName](obj.GetFieldByName(fieldName));
+            }
+
+            return true;
+        }
 
     }
 

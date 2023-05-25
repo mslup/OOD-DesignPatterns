@@ -10,12 +10,13 @@ namespace ProjOb
 {
     [DataContract, KnownType(typeof(CommandDelete)),
         KnownType(typeof(AbstractCommand))]
-    public class CommandDelete : AbstractCommand, ICommand
+    public class CommandDelete : AbstractCommand
     {
-        [DataMember] public string Arguments { get; set; }
+        [DataMember] public override string Arguments { get; set; }
         [DataMember] private string objectType;
-        [DataMember] private List<Predicate>? predicates;
+        [DataMember] private List<Requirement>? predicates;
         private IDictionary? iteratedObjects;
+        private IFilterable deleted;
 
         public CommandDelete()
         {
@@ -23,7 +24,7 @@ namespace ProjOb
             Arguments = "";
         }
 
-        public bool Preprocess()
+        public override bool Preprocess()
         {
             string[] tokens = Arguments.Split(' ', 2);
 
@@ -36,7 +37,7 @@ namespace ProjOb
             return true;
         }
 
-        public bool PreprocessFromFile(StreamReader reader)
+        public override bool PreprocessFromFile(StreamReader reader)
         {
             string[] tokens = Arguments.Split(' ', 2);
 
@@ -49,11 +50,12 @@ namespace ProjOb
             return true;
         }
 
-        public void Execute()
+        public override void Execute()
         {
             if (!FindCollection(objectType, out iteratedObjects))
                 return;
 
+            
             string? foundKey = RunPredicatesGetKey
                 (iteratedObjects, predicates, true);
 
@@ -63,10 +65,27 @@ namespace ProjOb
                 return;
             }
 
+            deleted = (IFilterable)iteratedObjects[foundKey];
+
             Console.WriteLine("Deleted object:");
-            Console.WriteLine(iteratedObjects[foundKey]);
-            
-            iteratedObjects.Remove(foundKey);
+            Console.WriteLine(deleted);
+
+            //iteratedObjects.Remove(foundKey);
+            Dictionaries.Remove(deleted);
+        }
+
+        public override void Undo()
+        {
+            Dictionaries.Add(deleted);
+            Console.WriteLine("Added object: ");
+            Console.WriteLine(deleted);
+        }
+
+        public override void Redo()
+        {
+            Dictionaries.Remove(deleted);
+            Console.WriteLine("Deleted object: ");
+            Console.WriteLine(deleted);
         }
 
         public override string ToString()

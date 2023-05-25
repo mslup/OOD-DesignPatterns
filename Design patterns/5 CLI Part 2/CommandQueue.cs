@@ -59,7 +59,7 @@ namespace ProjOb
             }
         }
 
-        public void Push(ICommand command)
+        public void Push(AbstractCommand command)
         {
             queue.Enqueue((AbstractCommand)command);
         }
@@ -81,7 +81,7 @@ namespace ProjOb
             while (queue.Count > 0)
             {
                 Console.WriteLine();
-                ICommand command = (ICommand)queue.Dequeue();
+                AbstractCommand command = (AbstractCommand)queue.Dequeue();
                 using ((ConsoleColorScope)ConsoleColor.White)
                     Console.WriteLine(command.ToString());
                 command.Execute();
@@ -153,7 +153,7 @@ namespace ProjOb
             string path = Path.Combine(cwd, filename + ".txt");
 
             using StreamWriter writer = new StreamWriter(path);
-            foreach (ICommand command in queue)
+            foreach (AbstractCommand command in queue)
                 writer.WriteLine(command.ToString());
 
             OpenFile(path);
@@ -177,7 +177,7 @@ namespace ProjOb
                 return;
             }
 
-            foreach (ICommand command in queue)
+            foreach (AbstractCommand command in queue)
             {
                 Console.WriteLine(command.ToString());
             }
@@ -229,7 +229,7 @@ namespace ProjOb
             {
                 fs = new FileStream(path, FileMode.Open);
             }
-            catch (FileNotFoundException e)
+            catch (FileNotFoundException)
             {
                 Console.WriteLine($"Could not find file '{filename}'.");
                 return;
@@ -273,7 +273,7 @@ namespace ProjOb
 
                 }
             }
-            catch (FileNotFoundException e)
+            catch (FileNotFoundException)
             {
                 Console.WriteLine($"Could not find file '{filename}'.");
             }
