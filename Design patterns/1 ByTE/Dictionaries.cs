@@ -56,6 +56,7 @@ namespace ProjOb
 
         static public void Remove(IFilterable obj)
         {
+
             objectDictionary[obj.Type].Remove(obj.ID);
         }
     }

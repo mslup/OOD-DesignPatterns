@@ -15,8 +15,6 @@ namespace ProjOb
                 ["delete"] = () => new CommandDelete()
             };
 
- 
-
         public static AbstractCommand? BuildCommand(string arg)
         {
             arg = arg.Trim();
@@ -37,8 +35,6 @@ namespace ProjOb
             return null;
         }
     }
-
- 
 
     public static class CLI
     {
@@ -73,7 +69,8 @@ namespace ProjOb
 
                 if (command.Preprocess())
                 {
-                    CommandHistory.Register(command);
+                    if (command is IUndoable)
+                        CommandHistory.Register(command as IUndoable);
                     command.Execute();
                 }
 

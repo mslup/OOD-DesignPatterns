@@ -31,15 +31,6 @@ namespace ProjOb
             PrintCollection(objectsToList);
         }
 
-        public override void Undo()
-        {
-
-        }
-
-        public override void Redo()
-        {
-            Execute();
-        }
 
         public override string ToString()
         {

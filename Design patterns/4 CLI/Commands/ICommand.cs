@@ -6,15 +6,18 @@ using System.Xml.Serialization;
 
 namespace ProjOb
 {
-    [DataContract, KnownType(typeof(AbstractCommand)), KnownType(typeof(CommandList)), KnownType(typeof(CommandAdd)), KnownType(typeof(CommandFind)), KnownType(typeof(CommandEdit))]
+    [DataContract, KnownType(typeof(AbstractCommand)), 
+        KnownType(typeof(CommandList)), 
+        KnownType(typeof(CommandAdd)),
+        KnownType(typeof(CommandFind)), 
+        KnownType(typeof(CommandEdit)),
+        KnownType(typeof(CommandDelete))]
     public abstract class AbstractCommand
     {
         public abstract string Arguments { get; set; }
         public abstract bool Preprocess();
         public abstract bool PreprocessFromFile(StreamReader reader);
         public abstract void Execute();
-        public abstract void Undo();
-        public abstract void Redo();
         public abstract override string ToString();
     
         protected static Dictionary<string, Func<AbstractBuilder>> BuilderDictionary
@@ -56,12 +59,12 @@ namespace ProjOb
                     throw new ArgumentException($"Unable to parse requirement: '{requirement}'");
                 }
 
-                FieldName = parts[0];
                 if (!typeDictionary.TryGetValue(objectType, out Func<string, string>? getter))
                 {
                     throw new KeyNotFoundException($"Unrecognized class name: '{objectType}'");
                 }
 
+                FieldName = parts[0].Trim();
                 try
                 {
                     FieldType = getter(FieldName);
@@ -462,6 +465,12 @@ namespace ProjOb
             return true;
         }
 
+    }
+
+    public interface IUndoable
+    {
+        public void Undo();
+        public void Redo();
     }
 
 }

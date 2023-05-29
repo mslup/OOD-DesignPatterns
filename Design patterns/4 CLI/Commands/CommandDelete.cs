@@ -10,7 +10,7 @@ namespace ProjOb
 {
     [DataContract, KnownType(typeof(CommandDelete)),
         KnownType(typeof(AbstractCommand))]
-    public class CommandDelete : AbstractCommand
+    public class CommandDelete : AbstractCommand, IUndoable
     {
         [DataMember] public override string Arguments { get; set; }
         [DataMember] private string objectType;
@@ -54,7 +54,6 @@ namespace ProjOb
         {
             if (!FindCollection(objectType, out iteratedObjects))
                 return;
-
             
             string? foundKey = RunPredicatesGetKey
                 (iteratedObjects, predicates, true);
@@ -74,14 +73,14 @@ namespace ProjOb
             Dictionaries.Remove(deleted);
         }
 
-        public override void Undo()
+        public void Undo()
         {
             Dictionaries.Add(deleted);
             Console.WriteLine("Added object: ");
             Console.WriteLine(deleted);
         }
 
-        public override void Redo()
+        public void Redo()
         {
             Dictionaries.Remove(deleted);
             Console.WriteLine("Deleted object: ");

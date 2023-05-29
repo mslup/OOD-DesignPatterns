@@ -6,7 +6,7 @@ namespace ProjOb
 {
     [DataContract, KnownType(typeof(CommandEdit)),
         KnownType(typeof(AbstractCommand))]
-    public class CommandEdit : AbstractCommand
+    public class CommandEdit : AbstractCommand, IUndoable
     {
         [DataMember] override public string Arguments { get; set; }
         [DataMember] private string objectType;
@@ -84,7 +84,7 @@ namespace ProjOb
             Console.WriteLine(found);
         }
 
-        public override void Undo()
+        public void Undo()
         {
             Console.WriteLine("Object:");
             Console.WriteLine(found);
@@ -93,7 +93,7 @@ namespace ProjOb
             Console.WriteLine(found);
         }
 
-        public override void Redo()
+        public void Redo()
         {
             Console.WriteLine("Object:");
             Console.WriteLine(found);

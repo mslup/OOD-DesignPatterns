@@ -191,8 +191,6 @@ namespace ProjOb
 
         private void Load(string arg)
         {
-            Action<string>? load = ExportXml;
-
             if (arg.Length == 0)
             {
                 Console.WriteLine("No argument given. " +

@@ -10,12 +10,12 @@ namespace ProjOb
 {
     [DataContract, KnownType(typeof(CommandAdd)),
         KnownType(typeof(AbstractCommand))]
-    public class CommandAdd : AbstractCommand
+    public class CommandAdd : AbstractCommand, IUndoable
     {
         [DataMember] override public string Arguments { get; set; }
         [DataMember] private string Representation;
         [DataMember] private AbstractBuilder? builder;
-        private IFilterable built;
+        [DataMember] private IFilterable built;
 
         public CommandAdd()
         {
@@ -70,13 +70,13 @@ namespace ProjOb
             Console.WriteLine(built);
         }
 
-        public override void Undo()
+        public void Undo()
         {
             Dictionaries.Remove(built);
             Console.WriteLine($"Deleted object: \n{built}");
         }
 
-        public override void Redo()
+        public void Redo()
         {
             Dictionaries.Add(built);
             Console.WriteLine($"Created object: \n{built}");

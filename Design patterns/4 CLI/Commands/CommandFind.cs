@@ -84,15 +84,6 @@ namespace ProjOb
             PrintCollection(foundObjectsCollection);
         }
 
-        public override void Undo()
-        {
-
-        }
-
-        public override void Redo()
-        {
-            Execute();
-        }
 
         public override string ToString()
         {
